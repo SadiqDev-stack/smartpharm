@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    /* OUTPUT */
+    "target": "ES2020",
+    "module": "Node16",
+    "rootDir": ".",
+    "outDir": "dist",
+
+    /* NODE COMPATIBILITY */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    /* STRICTNESS */
+    "strict": true,
+
+    /* MODULE SYSTEM (FIXED) */
+    "moduleResolution": "node16",
+
+    /* QUALITY */
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* KEEP SIMPLE */
+    "verbatimModuleSyntax": false
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
