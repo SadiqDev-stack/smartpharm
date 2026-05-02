@@ -1,0 +1,26 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "a smart pharmacy inventory management system",
+  "keywords": [
+    "pharmacy",
+    "inventory",
+    "system"
+  ],
+  "homepage": "https://github.com/SadiqDev-stack/smartpharm#readme",
+  "bugs": {
+    "url": "https://github.com/SadiqDev-stack/smartpharm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SadiqDev-stack/smartpharm.git"
+  },
+  "license": "ISC",
+  "author": "sadiq cyber",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "node server.js"
+  }
+}
