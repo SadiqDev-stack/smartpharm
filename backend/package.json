@@ -22,9 +22,8 @@
   "scripts": {
     "test": "npm test",
     "dev": "tsc",
-    "start": "node --env-file=.env ./api/server.js",
     "vercel-build": "npm run dev",
-    "startAll": "tsc && node --env-file=.env ./dist/api/server.js"
+    "start": "tsc && node --env-file=.env ./dist/api/server.js"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
