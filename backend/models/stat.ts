@@ -35,4 +35,6 @@ const Stat = new Schema({
   },
 });
 
+Stat.index({ id: 1, createdAt: -1 });
+
 export default model("Stat", Stat);
