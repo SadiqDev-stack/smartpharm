@@ -201,5 +201,8 @@ const upload = multer({
     limits: { fileSize: 200 * 1024 * 1024 }, // 200MB
 });
 process.__dirname = __dirname;
+const generateUniqueId = (prefix = "") => {
+    return `${prefix}_${Date.now()}`;
+};
 // for socket io 
-export { createToken, getTokenData, hash, compareHashes, sendMail, randomHash, sendMailConfirmation, readFile, writeFile, deleteFile, __dirname, path, cacheMem, checkCache, compressData, decompressData, getCache, setCache, restoreDoc, sendMessage, upload, uploadFile, rewriteFile };
+export { createToken, getTokenData, hash, compareHashes, sendMail, randomHash, sendMailConfirmation, readFile, writeFile, deleteFile, __dirname, path, cacheMem, checkCache, compressData, decompressData, getCache, setCache, restoreDoc, sendMessage, upload, uploadFile, rewriteFile, generateUniqueId };

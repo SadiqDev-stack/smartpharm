@@ -232,6 +232,10 @@ const upload = multer({
 
 (process as any).__dirname = __dirname
 
+const generateUniqueId = (prefix = "") => {
+    return `${prefix}_${Date.now()}`
+}
+
 // for socket io 
 
 export {
@@ -257,5 +261,6 @@ export {
     sendMessage,
     upload,
     uploadFile,
-    rewriteFile
+    rewriteFile,
+    generateUniqueId
 };

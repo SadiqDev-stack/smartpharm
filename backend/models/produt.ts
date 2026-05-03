@@ -1,0 +1,74 @@
+import mongoose, { model, Schema } from "mongoose";
+import { defaultSchema } from "../utilities/models.js";
+const {
+    ObjectId
+} = mongoose.Types;
+
+
+interface IDosageBreakdown {
+  label: string;
+  description: string;
+  age: string;
+}
+
+interface IDosage {
+  pregnantAllowed: boolean;
+  sensitive?: boolean;
+  breakdown: IDosageBreakdown[];
+}
+
+interface IPrice {
+  value: number;
+  type: "sachet" | "capsule" | "box" | "bottle" | "ample" | "ointment" | "item";
+}
+
+interface IPriceUpdate {
+  date: Date;
+  price: number;
+}
+
+const ProductSchema = new Schema(
+  {
+    name: { type: String, required: true, unique: true, index: true },
+    description: { type: String },
+    dosage: {
+      pregnantAllowed: Boolean,
+      sensitive: { type: Boolean, default: false },
+      breakdown: [
+        {
+          label: String, // adult infant child pregnant 
+          description: String, // 2 times a day
+          age: String, // 12 above
+        },
+      ],
+    },
+    type: {
+      type: String,
+      enum: ["injection", "syrup", "drop", "cream", "inhaler", "tin", "drip", "item"],
+      index: true,
+    },
+    relatedProduct: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+    price: [{
+        label: String, // per bottle etc
+        value: Number,
+    }],
+    invoicingCount: { type: Number, default: 0 },
+    priceUpdateBreakdown: [
+      {
+        date: Date,
+        price: Number,
+      },
+    ],
+    expiryDate: Date,
+    expiryCount: { type: Number, default: 0 },
+    ...defaultSchema("Product")
+  },
+  { timestamps: true }
+);
+
+// Indexes for queries
+ProductSchema.index({ name: 1, type: 1 });
+ProductSchema.index({ expiryDate: 1 });
+ProductSchema.index({ createdAt: -1 });
+
+export default model("Product", ProductSchema);
