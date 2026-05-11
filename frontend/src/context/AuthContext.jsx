@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
         if (response.data.success) {
           setUser(response.data.user);
         }
+        
       } catch (err) {
         // User not authenticated
         setUser(null);

@@ -1,4 +1,4 @@
-const { APP_NAME = "Sadiq Caps", SENDER_MAIL = "support@sadiqcaps.com" } = process.env;
+const { APP_NAME = "smart pharm", SENDER_MAIL = "support@sadiqcaps.com" } = process.env;
 import { composeMail } from "../utilities/general.js";
 import { FrontendURL, log, serverUrl } from "../middlewares/logger.js";
 
@@ -154,7 +154,7 @@ const templates = {
       <!-- Header -->
       <div class="header">
         <div class="logo-text">🧢</div>
-        <div class="brand-name">Sadiq Caps</div>
+        <div class="brand-name">smart pharm</div>
       </div>
       
       <!-- Content -->
@@ -182,7 +182,7 @@ const templates = {
       <!-- Footer -->
       <div class="footer">
         <p class="footer-text">
-          &copy; ${new Date().getFullYear()} Sadiq Caps. All rights reserved.
+          &copy; ${new Date().getFullYear()} smart pharm. All rights reserved.
         </p>
         <p class="footer-text" style="margin-top: 8px; font-size: 12px;">
           Premium Quality Caps & Headwear
@@ -201,7 +201,7 @@ const templates = {
   
   message: data => {
     const { 
-      title = "Sadiq Caps", 
+      title = "smart pharm", 
       spinner = false, 
       req, 
       description = "Please wait while we redirect you...", 
@@ -341,7 +341,7 @@ const templates = {
     </div>
     
     <div class="footer">
-      Sadiq Caps - Premium Quality Headwear
+      smart pharm - Premium Quality Headwear
     </div>
   </div>
   
@@ -364,10 +364,10 @@ const templates = {
 const sendMail = async (data = {}, req, cb = () => null) => {
   try {
     data = {
-      subject: `Confirm your Sadiq Caps account`,
+      subject: `Confirm your smart pharm account`,
       template: "confirmation",
       buttonText: "Verify Account",
-      description: "Thank you for choosing Sadiq Caps! Please click the button below to verify your email address and complete your registration.",
+      description: "Thank you for choosing smart pharm! Please click the button below to verify your email address and complete your registration.",
       req,
       email: SENDER_MAIL,
       mail: data.email || SENDER_MAIL,

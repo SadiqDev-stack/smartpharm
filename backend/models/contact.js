@@ -8,6 +8,7 @@ import { Schema, model, ObjectId } from "mongoose";
 //   subject: 'djdkd',
 //   message: 'dusidfu dfiudyn djd'
 // }
+
 const Contact = new Schema({
   phone: {
     type: String,
@@ -58,4 +59,4 @@ const Contact = new Schema({
   },
 });
 
-export default model("simplebusinessusercontact", Contact);
+export default model("smartpharm_contact", Contact);

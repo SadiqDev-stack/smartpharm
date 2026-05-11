@@ -6,13 +6,13 @@
     "business",
     "website"
   ],
-  "homepage": "https://github.com/SadiqDev-stack/simplebusinesswebsite#readme",
+  "homepage": "https://github.com/SadiqDev-stack/smartpharm#readme",
   "bugs": {
-    "url": "https://github.com/SadiqDev-stack/simplebusinesswebsite/issues"
+    "url": "https://github.com/SadiqDev-stack/smartpharm/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SadiqDev-stack/simplebusinesswebsite.git"
+    "url": "git+https://github.com/SadiqDev-stack/smartpharm.git"
   },
   "license": "ISC",
   "author": "sadiq cyber",

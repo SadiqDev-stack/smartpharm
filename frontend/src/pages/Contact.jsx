@@ -9,6 +9,7 @@ export const Contact = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -105,6 +106,7 @@ export const Contact = () => {
                     className={`w-full px-4 py-3 bg-gray-800 border ${
                       errors.name ? 'border-red-500' : 'border-gray-700'
                     } rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-500 transition-all`}
+                 
                     {...register('name', { required: 'Name is required' })}
                   />
                   {errors.name && (

@@ -7,10 +7,11 @@ import {
   Info, 
   ArrowRight,
   Loader2,
-  Home
+  Home,
 } from 'lucide-react';
 
 export const MessagePage = () => {
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [countdown, setCountdown] = useState(5);

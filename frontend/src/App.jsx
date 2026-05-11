@@ -46,6 +46,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* contact route */}
           <Route
             path="/contacts"
             element={
@@ -55,7 +57,7 @@ function App() {
             }
           />
 
-          {/* Catch all */}
+          {/* Catch all not found */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

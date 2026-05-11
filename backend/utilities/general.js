@@ -212,6 +212,10 @@ const random = (min, max) => {
   return Math.floor(Math.random() * (max - min) + min);
 };
 
+const generateUniqueId = prefix => {
+  return `${prefix}${Date.now()}`
+}
+
 export {
   createToken,
   getTokenData,
@@ -231,4 +235,5 @@ export {
   sanitizeInput,
   useLimiter,
   random,
+  generateUniqueId
 };

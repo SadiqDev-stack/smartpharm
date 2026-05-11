@@ -1,9 +1,21 @@
-import { Schema, model } from "mongoose";
-const { MAX_LOGIN_FAIL_ATTEMPT = 5 } = process.env;
-import { generateKey } from "../utilities/general.js";
-import { mongoose } from "../middlewares/dbhandler.js";
+import mongoose, { Schema, model } from "mongoose";
+import { generateUniqueId } from "../utilities/general.js";
+import { defaultSchema } from "../utilities/models.js";
 
-const { ObjectId } = mongoose.Types;
+const {
+  BASIC_USAGE_LIMIT = 30, // THIS IS DAY LIMIT FOR ONLINE USERS TO PAY DEFAULT IS MONTH
+  BASIC_EMAIL_LIMIT = 200,
+  MAX_LOGIN_FAIL_ATTEMPT = 5,
+} = process.env;
+
+const defaultPackages = [
+  {
+    name: BASIC_API_LIMIT,
+    description:
+      "this is a free package for users in our app to test it and explore the features",
+    price: 0,
+  },
+];
 
 const UserSchema = new Schema(
   {
@@ -14,11 +26,14 @@ const UserSchema = new Schema(
       trim: true,
       lowercase: true,
     },
+
     email: {
       type: String,
       required: true,
+      unique: true,
       maxLength: 200,
       lowercase: true,
+      index: true,
     },
 
     active: {
@@ -37,13 +52,15 @@ const UserSchema = new Schema(
       unique: true,
       maxLength: 200,
     },
-
+    accountMode: {
+      type: String,
+      enum: ["live", "offline"],
+    },
     password: {
       type: String,
       required: true,
       maxLength: 1000,
     },
-
     gender: {
       type: String,
       enum: ["male", "female"],
@@ -59,7 +76,10 @@ const UserSchema = new Schema(
       enum: ["admin", "user", "super"],
       default: "user",
     },
-
+    package: {
+      type: String,
+      default: defaultPackages[0].name,
+    },
     emailVerified: {
       type: Boolean,
       default: false,
@@ -68,9 +88,10 @@ const UserSchema = new Schema(
       type: Date,
       default: Date.now(),
     },
+
     loginFailAttempt: {
       type: Number,
-      max: MAX_LOGIN_FAIL_ATTEMPT,
+      max: +MAX_LOGIN_FAIL_ATTEMPT,
       default: 0,
     },
     lastFailedLogin: {
@@ -80,8 +101,8 @@ const UserSchema = new Schema(
 
     createdAt: {
       type: Date,
-      immutable: true,
       default: Date.now(),
+      immutable: true,
     },
 
     updatedAt: {
@@ -94,32 +115,63 @@ const UserSchema = new Schema(
       maxLength: 4,
       default: "0000",
     },
+
     address: {
       type: String,
       required: true,
     },
 
-    contact: {
-      type: Number,
-      default: 0,
+    storage: {
+      type: [
+        {
+          name: String,
+          description: String,
+        },
+      ],
+      required: true,
+      default: [],
     },
 
-    storage: {
-      contactList: [ObjectId],
+    stats: {
+      type: {
+        totalLoans: Number,
+        totalPatients: Number,
+        totalInvoice: Number,
+        totalProduct: Number,
+        totalNotifications: Number,
+      },
+
       default: {
-        contactList: [],
+        totalLoans: 0,
+        totalPatients: 0,
+        totalInvoice: 0,
+        totalProduct: 0,
+        totalNotifications: 0,
       },
     },
+
+    shopDescription: {
+      name: String,
+      description: String,
+      type: {
+        enum: ["small", "medium", "enterprise"],
+      },
+      required: true,
+    },
   },
+
   {
     timestamps: true,
   },
 );
 
-// all written by sadiq manually not ai
-// indexing add speed and queries fast
-UserSchema.index({ email: 1 });
+// │ • pharmName: string                                                         │
+// │ • pharmDescription: string                                                  │
+// │ • pharmCertificate: string                                                  │
+// │ • pharmYears: number                                                        │
+// │ • pharmType: enum(small, medium, enterprise)
+
 UserSchema.index({ createdAt: -1 });
 UserSchema.index({ name: 1 });
 
-export default model("simplebusinesswebsiteuser", UserSchema);
+export default model("smartpharm_user", UserSchema);

@@ -11,6 +11,7 @@ export const UserDashboard = () => {
       text: "Hello! 👋 I'm Sadiq Caps AI Assistant. How can I help you today?" 
     }
   ]);
+  
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
