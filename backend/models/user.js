@@ -10,7 +10,7 @@ const {
 
 const defaultPackages = [
   {
-    name: BASIC_API_LIMIT,
+    name: BASIC_USAGE_LIMIT,
     description:
       "this is a free package for users in our app to test it and explore the features",
     price: 0,
@@ -151,12 +151,19 @@ const UserSchema = new Schema(
     },
 
     shopDescription: {
-      name: String,
-      description: String,
-      type: {
-        enum: ["small", "medium", "enterprise"],
+      name: {
+        type: String,
+        required: true,
       },
-      required: true,
+      description: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        enum: ["small", "medium", "enterprise"],
+        required: true,
+      },
     },
   },
 

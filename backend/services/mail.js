@@ -385,8 +385,8 @@ const sendMail = async (data = {}, req, cb = () => null) => {
     const sent = await composeMail(req, data.mail, data.subject, template, data);
     cb(sent);
     console.log(sent);
+    
   } catch (er) {
-    console.log(er);
     log(er, "bad");
     cb(false);
   }

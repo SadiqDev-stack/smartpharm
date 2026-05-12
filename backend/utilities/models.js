@@ -27,8 +27,10 @@ const defaultSchema = (modelName = "") => {
     createdBy: { type: ObjectId, ref: "User" },
     isImported: { type: Boolean, default: false },
     syncInfo: {
-      dataUploaded: Boolean,
-      mediaUploaded: Boolean,
+      type: {
+        dataUploaded: Boolean,
+        mediaUploaded: Boolean,
+      },
       default: {
         dataUploaded: true,
         mediaUploaded: false,

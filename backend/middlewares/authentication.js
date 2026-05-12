@@ -11,8 +11,7 @@ export default async (req, res, next) => {
             email
         })
        
-    
-   console.log(user) // im debugging
+
     if(!user || user == null || user == undefined){
             res.json({
                 message: "User With This Email Doesnt Exist",

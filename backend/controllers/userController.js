@@ -18,9 +18,10 @@ export const userController = {
   async register(req, res, next) {
     try {
       for (const field in req.body) {
-        if (field !== "password" && req.body[field])
+        if (!["password", 'shopDescription', "stat"].includes(field) && req.body[field])
           req.body[field] = sanitizeInput(req.body[field]);
       }
+
 
       let {
         name,
@@ -30,22 +31,27 @@ export const userController = {
         phone,
         gender = "male",
         country = "nigeria",
+        shopDescription
       } = req.body;
 
-      if (name.length >= 100) {
+      if (name && name.length >= 100) {
         return res
           .status(400)
           .json({ success: false, message: "your name is too long" });
       }
 
-      if (address.length >= 500) {
+      if (address && address.length >= 500) {
         return res.status(400).json({
           success: false,
           message: "your address is too long",
         });
       }
 
-      if (!name || !email.includes("@")) {
+      if(!address){
+        throw new req.AppError("address is invalid")
+      }
+
+      if (!name ||  !email || !email.includes("@")) {
         throw new req.AppError(
           !name ? "invalid user name" : "invalid email address",
         );
@@ -53,6 +59,14 @@ export const userController = {
 
       if (!phone || phone.length < 11 || typeof phone !== "string") {
         throw new req.AppError("invalid phone number");
+      }
+
+      if(!shopDescription || !shopDescription.name || !shopDescription.description){
+        throw new req.AppError("invalid shop description")
+      }
+
+      if(!password){
+        throw new req.AppError("please provide a password")
       }
 
       const existing = await User.findOne({ $or: [{ email }, { phone }] });

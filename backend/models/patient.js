@@ -46,13 +46,4 @@ PatientSchema.index({ name: 1, userId: 1 });
 PatientSchema.index({ isResolved: 1 });
 
 export default model("smartpharm_patient", PatientSchema);
-    default: [],
-  },
-  loanId: {
-    type: ObjectId,
-    ref: "Loan",
-  },
-  ...defaultSchema("Patient"),
-});
-
-export default model("smartpharm_patient", Patient);
+ 
