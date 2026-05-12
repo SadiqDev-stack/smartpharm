@@ -1,4 +1,4 @@
-const { APP_NAME = "smart pharm", SENDER_MAIL = "support@sadiqcaps.com" } = process.env;
+const { APP_NAME = "Smart Pharm", SENDER_MAIL = "support@smartpharm.com" } = process.env;
 import { composeMail } from "../utilities/general.js";
 import { FrontendURL, log, serverUrl } from "../middlewares/logger.js";
 
@@ -185,7 +185,7 @@ const templates = {
           &copy; ${new Date().getFullYear()} smart pharm. All rights reserved.
         </p>
         <p class="footer-text" style="margin-top: 8px; font-size: 12px;">
-          Premium Quality Caps & Headwear
+          Your Trusted Online Pharmacy
         </p>
         <div class="footer-links">
           <a href="${FrontendURL}">Home</a>

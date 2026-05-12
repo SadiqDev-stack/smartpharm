@@ -130,7 +130,7 @@ const rewriteFile = async (file, location) => {
 
 process.__dirname = __dirname;
 
-const generateKey = () => "sadiqsharp_" + new ObjectId().toString();
+const generateKey = () => "smartpharm_" + new ObjectId().toString();
 
 const { NODE_ENV = "development" } = process.env;
 

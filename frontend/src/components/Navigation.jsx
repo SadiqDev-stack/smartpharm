@@ -1,91 +1,288 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { Menu, X, LogOut } from "lucide-react";
+// frontend/src/components/Navigation.jsx
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { 
+  Package, 
+  Menu, 
+  X, 
+  User, 
+  LogOut, 
+  Settings, 
+  HelpCircle,
+  MessageCircle,
+  Sparkles,
+  LayoutDashboard,
+  Home,
+  CreditCard,
+  Users,
+  FileText,
+  Bell,
+  ShoppingCart
+} from 'lucide-react';
 
-const Navigation = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+const Navigation = ({ user, onLogout }) => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
-  const [open, setOpen] = React.useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
+
+  // Smooth scroll to section
+  const handleSmoothScroll = (e, sectionId) => {
+    e.preventDefault();
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    setMobileMenuOpen(false);
   };
 
-  if (!isAuthenticated) return null;
+  // Navigation links based on user role
+  const getNavLinks = () => {
+    if (!user) {
+      // Public navigation
+      return [
+        { label: 'Home', href: '/', isScroll: false },
+        { label: 'Features', href: '#features', isScroll: true },
+        { label: 'Benefits', href: '#benefits', isScroll: true },
+        { label: 'Pricing', href: '#pricing', isScroll: true },
+      ];
+    }
 
-  const menuItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Products", path: "/products" },
-    { label: "Patients", path: "/patients" },
-    { label: "Loans", path: "/loans" },
-    { label: "Invoices", path: "/invoices" },
-  ];
+    // Authenticated user navigation based on role
+    const baseLinks = [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, isScroll: false },
+      { label: 'Products', href: '/dashboard/products', icon: Package, isScroll: false },
+      { label: 'Patients', href: '/dashboard/patients', icon: Users, isScroll: false },
+      { label: 'Loans', href: '/dashboard/loans', icon: CreditCard, isScroll: false },
+      { label: 'Invoices', href: '/dashboard/invoices', icon: FileText, isScroll: false },
+    ];
+
+    if (user.role === 'admin' || user.role === 'super') {
+      baseLinks.push({ label: 'Analytics', href: '/dashboard/analytics', icon: ShoppingCart, isScroll: false });
+    }
+
+    return baseLinks;
+  };
+
+  const navLinks = getNavLinks();
 
   return (
-    <nav className="bg-slate-900 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <span className="font-bold text-white">SP</span>
-            </div>
-            <span className="font-bold hidden sm:inline">SmartPharm</span>
-          </Link>
+    <>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] shadow-sm' 
+          : 'bg-white/80 backdrop-blur-sm'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 md:h-[70px]">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 shrink-0">
+              <Package className="w-6 h-6 md:w-7 md:h-7 text-[#0F6E8A]" />
+              <span className="text-xl md:text-2xl font-bold text-[#1E293B]">
+                Smart<span className="text-[#0F6E8A]">Pharm</span>
+              </span>
+            </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="px-3 py-2 rounded-md text-sm hover:bg-slate-700 transition"
-              >
-                {item.label}
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-6 lg:gap-8">
+              {navLinks.map((link) => (
+                link.isScroll ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={(e) => handleSmoothScroll(e, link.href.substring(1))}
+                    className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className={`text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors ${
+                      location.pathname === link.href ? 'text-[#0F6E8A]' : ''
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              ))}
+              
+              {/* Additional navigation for all users */}
+              <Link to="/assistant" className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors flex items-center gap-1">
+                <Sparkles size={16} />
+                AI Assistant
               </Link>
-            ))}
-          </div>
-
-          {/* User & Mobile Menu */}
-          <div className="flex items-center space-x-4">
-            <div className="hidden sm:flex items-center space-x-2 text-sm">
-              <span className="text-gray-300">{user?.name}</span>
+              <Link to="/contact" className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors flex items-center gap-1">
+                <MessageCircle size={16} />
+                Support
+              </Link>
             </div>
+
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-3">
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#F8FAFC] transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="text-sm font-medium text-[#1E293B]">{user.name?.split(' ')[0]}</span>
+                  </button>
+
+                  {dropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)}></div>
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#E2E8F0] py-2 z-20">
+                        <Link to="/dashboard/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F6E8A]">
+                          <User size={16} />
+                          Profile
+                        </Link>
+                        <Link to="/dashboard/settings" className="flex items-center gap-2 px-4 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F6E8A]">
+                          <Settings size={16} />
+                          Settings
+                        </Link>
+                        <div className="border-t border-[#E2E8F0] my-1"></div>
+                        <button onClick={onLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#EF4444] hover:bg-[#FEF2F2]">
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link to="/auth/login" className="px-4 py-2 text-[#64748B] font-semibold hover:text-[#0F6E8A] transition">
+                    Sign In
+                  </Link>
+                  <Link to="/auth/register" className="px-5 py-2 bg-[#0F6E8A] text-white rounded-lg font-semibold hover:bg-[#0A4D62] transition-all hover:shadow-md">
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
             <button
-              onClick={handleLogout}
-              className="p-2 hover:bg-slate-700 rounded-md transition"
-              title="Logout"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-[#F8FAFC] transition-colors"
             >
-              <LogOut size={20} />
-            </button>
-            <button
-              onClick={() => setOpen(!open)}
-              className="md:hidden p-2 hover:bg-slate-700 rounded-md"
-            >
-              {open ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X className="w-6 h-6 text-[#1E293B]" /> : <Menu className="w-6 h-6 text-[#1E293B]" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {open && (
-          <div className="md:hidden pb-4 space-y-2">
-            {menuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="block px-3 py-2 rounded-md hover:bg-slate-700 transition"
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-b border-[#E2E8F0] shadow-lg animate-fade-in">
+            <div className="px-4 py-3 space-y-2">
+              {navLinks.map((link) => (
+                link.isScroll ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={(e) => handleSmoothScroll(e, link.href.substring(1))}
+                    className="flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition"
+                  >
+                    {link.icon && <link.icon size={18} />}
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className={`flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition ${
+                      location.pathname === link.href ? 'text-[#0F6E8A] bg-[#F8FAFC]' : ''
+                    }`}
+                  >
+                    {link.icon && <link.icon size={18} />}
+                    {link.label}
+                  </Link>
+                )
+              ))}
+              
+              <Link to="/assistant" className="flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition">
+                <Sparkles size={18} />
+                AI Assistant
               </Link>
-            ))}
+              
+              <Link to="/contact" className="flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition">
+                <MessageCircle size={18} />
+                Support
+              </Link>
+
+              {!user && (
+                <div className="pt-2 space-y-2 border-t border-[#E2E8F0]">
+                  <Link to="/auth/login" className="block px-3 py-2 text-center text-[#0F6E8A] font-semibold">
+                    Sign In
+                  </Link>
+                  <Link to="/auth/register" className="block px-3 py-2 text-center bg-[#0F6E8A] text-white rounded-lg font-semibold">
+                    Get Started
+                  </Link>
+                </div>
+              )}
+
+              {user && (
+                <div className="pt-2 space-y-2 border-t border-[#E2E8F0]">
+                  <div className="px-3 py-2 flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-[#1E293B]">{user.name}</div>
+                      <div className="text-xs text-[#64748B]">{user.email}</div>
+                    </div>
+                  </div>
+                  <Link to="/dashboard/profile" className="flex items-center gap-2 px-3 py-2 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]">
+                    <User size={18} />
+                    Profile
+                  </Link>
+                  <Link to="/dashboard/settings" className="flex items-center gap-2 px-3 py-2 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]">
+                    <Settings size={18} />
+                    Settings
+                  </Link>
+                  <button onClick={onLogout} className="w-full flex items-center gap-2 px-3 py-2 text-[#EF4444] rounded-lg hover:bg-[#FEF2F2]">
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+
+      {/* Spacer to prevent content from hiding under fixed nav */}
+      <div className="h-16 md:h-[70px]"></div>
+    </>
   );
 };
 

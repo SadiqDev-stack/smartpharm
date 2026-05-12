@@ -1,6 +1,6 @@
-# Sadiq Caps - Modern React Frontend
+# Smart Pharm - Modern React Frontend
 
-A beautiful, responsive, and modern React frontend for the Sadiq Caps business website and admin dashboard.
+A beautiful, responsive, and modern React frontend for the Smart Pharm online pharmacy platform and admin dashboard.
 
 ## 🎯 Features
 

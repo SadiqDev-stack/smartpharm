@@ -22,7 +22,7 @@ class AppError extends Error {
   }
 }
 
-const serverUrl = NODE_ENV === 'production' ? "https://sadiqcapsapi.vercel.app" : `http://localhost:${PORT}`;
+const serverUrl = NODE_ENV === 'production' ? "https://smartpharmapi.vercel.app" : `http://localhost:${PORT}`;
 
 
 const logger = (req, res, next) => {

@@ -302,7 +302,7 @@ export const userController = {
       sendMail(
         {
           email,
-          subject: `Confirm Password Change For Sadiq Caps Account`,
+          subject: `Confirm Password Change For Smart Pharm Account`,
           title: "Confirm Password Change",
           buttonText: "Change Password",
           description: `Click on the link below to reset your password to ${newPassword.slice(0, 5) + "..."}`,

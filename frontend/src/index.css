@@ -1,8 +1,54 @@
-/* importing tailwindcss */
+/* frontend/src/index.css */
 @import "tailwindcss";
 
 @layer base {
-  body {
-    @apply bg-black text-white font-sans;
+  :root {
+    /* Primary Cool Tones */
+    --primary: #0F6E8A;
+    --primary-light: #48B5C5;
+    --primary-dark: #0A4D62;
+    
+    /* Neutrals */
+    --bg-light: #F8FAFC;
+    --bg-white: #FFFFFF;
+    --text-dark: #1E293B;
+    --text-muted: #64748B;
+    --border: #E2E8F0;
+    
+    /* Vibrant Accents */
+    --accent-orange: #F97316;
+    --accent-green: #10B981;
+    --accent-red: #EF4444;
+    --accent-purple: #8B5CF6;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#0F6E8A] text-white px-5 py-2.5 rounded-lg font-semibold transition-all hover:bg-[#0A4D62] hover:shadow-lg hover:-translate-y-0.5;
+  }
+  
+  .btn-outline {
+    @apply border border-[#E2E8F0] text-[#64748B] px-5 py-2.5 rounded-lg font-semibold transition-all hover:border-[#0F6E8A] hover:text-[#0F6E8A];
+  }
+  
+  .btn-large {
+    @apply px-6 py-3 text-base;
+  }
+  
+  .container-custom {
+    @apply max-w-7xl mx-auto px-6;
+  }
+  
+  .section-badge {
+    @apply inline-block bg-[#E0F2FE] text-[#0F6E8A] px-3 py-1 rounded-full text-sm font-semibold mb-4;
+  }
+  
+  .section-title {
+    @apply text-4xl md:text-5xl font-bold text-[#1E293B] mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-lg text-[#64748B] max-w-2xl mx-auto;
   }
 }

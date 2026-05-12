@@ -8,13 +8,16 @@ import Patients from "./pages/Patients";
 import Loans from "./pages/Loans";
 import Invoices from "./pages/Invoices";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Landing from "./pages/Landing";
+import Navigation from "./components/Navigation";
 
 const App = () => {
   return (
     <AuthProvider>
       <BrowserRouter>
+      <Navigation></Navigation>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

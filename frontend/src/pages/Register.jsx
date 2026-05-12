@@ -12,6 +12,8 @@ const Register = () => {
     phone: "",
     address: "",
     shopName: "",
+    shopeDescription: '',
+    shopeType: "small"
   });
 
   const handleChange = (e) => {
@@ -43,6 +45,25 @@ const Register = () => {
               onChange={handleChange}
               className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
             />
+          </label>
+
+            <label className="block">
+            <span className="text-slate-300 text-sm">Shop Description</span>
+            <input
+              name="shopName"
+              value={form.shopeDescription}
+              onChange={handleChange}
+              className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500"
+            />
+          </label>
+
+            <label className="block">
+            <span className="text-slate-300 text-sm">Shop name</span>
+          <select className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-500" onSelect={handleChange} name="" value={form.shopeType} id="">
+            <option selected value="small">small</option>
+            <option value="medium">medium</option>
+            <option value="enterprice">enterprise</option>
+          </select>
           </label>
 
           <label className="block">

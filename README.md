@@ -161,8 +161,8 @@ simplebusinesswebsite/
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/SadiqDev-stack/simplebusinesswebsite.git
-cd simplebusinesswebsite
+git clone https://github.com/SmartPharm/smartpharmapp.git
+cd smartpharmapp
 ```
 
 ### Step 2: Backend Setup
@@ -614,16 +614,16 @@ This project is licensed under the ISC License - see the LICENSE file for detail
 
 ## 👤 Author
 
-**Sadiq Cyber**
-- GitHub: [@SadiqDev-stack](https://github.com/SadiqDev-stack)
-- Project: [simplebusinesswebsite](https://github.com/SadiqDev-stack/simplebusinesswebsite)
+**Smart Pharm Team**
+- GitHub: [@SmartPharm](https://github.com/SmartPharm)
+- Project: [smartpharmapp](https://github.com/SmartPharm/smartpharmapp)
 
 ---
 
 ## 🆘 Support
 
 For issues, questions, or suggestions:
-- Open an [GitHub Issue](https://github.com/SadiqDev-stack/simplebusinesswebsite/issues)
+- Open an [GitHub Issue](https://github.com/SmartPharm/smartpharmapp/issues)
 - Check existing documentation
 - Review API endpoint examples
 

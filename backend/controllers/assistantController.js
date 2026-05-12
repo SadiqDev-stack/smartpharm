@@ -55,7 +55,7 @@ export const assistantController = {
 User: ${userName || "Customer"}
 Message: ${message}
 
-Please provide a helpful response about Sadiq Caps products, orders, or support.
+Please provide a helpful response about Smart Pharm medications, health products, orders, or support.
 `;
 
       Assistant.getResponse(
