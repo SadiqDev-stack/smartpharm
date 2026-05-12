@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, use } from "react";
-import { userAPI } from "../services/api";
+import React, { createContext, useState, useEffect } from "react";
+import axios from "axios";
 
 export const AuthContext = createContext();
 
@@ -7,44 +7,61 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
- 
 
-  // Check if user is already logged in
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await userAPI.getProfile();
-        if (response.data.success) {
-          setUser(response.data.user);
-        }
-        
-      } catch (err) {
-        // User not authenticated
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Check if user is logged in on mount
     checkAuth();
   }, []);
 
-  const login = async (email, password) => {
-    setLoading(true);
-    setError(null);
-
+  const checkAuth = async () => {
     try {
-      const response = await userAPI.login(email, password);
+      const response = await axios.get(`${API_URL}/user/profile`, {
+        withCredentials: true,
+      });
+      setUser(response.data.user || response.data.data?.user || null);
+      setError(null);
+    } catch (err) {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (response.data.success) {
-        setUser(response.data.user);
-      }
-
+  const login = async (email, password) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${API_URL}/user/authenticate`,
+        { email, password },
+        { withCredentials: true }
+      );
+      setUser(response.data.user || response.data.data?.user || null);
+      setError(null);
       return response.data;
     } catch (err) {
       const message = err.response?.data?.message || "Login failed";
       setError(message);
-      return { success: false, message };
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/user/register`, userData, {
+        withCredentials: true,
+      });
+      await checkAuth();
+      setError(null);
+      return response.data;
+    } catch (err) {
+      const message = err.response?.data?.message || "Registration failed";
+      setError(message);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -52,18 +69,31 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await userAPI.logout();
+      await axios.post(`${API_URL}/user/logout`, {}, { withCredentials: true });
       setUser(null);
+      setError(null);
     } catch (err) {
       console.error("Logout error:", err);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{ user, loading, error, login, logout, setError }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    loading,
+    error,
+    login,
+    register,
+    logout,
+    isAuthenticated: !!user,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
+  return context;
 };

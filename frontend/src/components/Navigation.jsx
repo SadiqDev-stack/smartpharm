@@ -1,167 +1,92 @@
-// components/Navigation.jsx
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Menu, X, LogOut } from "lucide-react";
-import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
 
-export const Navigation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+const Navigation = () => {
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [open, setOpen] = React.useState(false);
 
   const handleLogout = async () => {
     await logout();
-    navigate("/");
+    navigate("/login");
   };
 
-  const navLinks = [
-    { label: "Home", href: "/" },
-    { label: "Contact", href: "/contact" },
+  if (!isAuthenticated) return null;
+
+  const menuItems = [
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Products", path: "/products" },
+    { label: "Patients", path: "/patients" },
+    { label: "Loans", path: "/loans" },
+    { label: "Invoices", path: "/invoices" },
   ];
 
-  // Check if user is admin or super
-  const isAdmin = user?.role === "admin" || user?.role === "super";
-  const isUser = user?.role === "user";
-
   return (
-    <nav className="sticky top-0 z-50 bg-black border-b border-gray-800 shadow-sm">
+    <nav className="bg-slate-900 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
-            <span className="text-2xl">🧢</span>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Sadiq Caps
-            </span>
-          </div>
+          {/* Logo */}
+          <Link to="/dashboard" className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <span className="font-bold text-white">SP</span>
+            </div>
+            <span className="font-bold hidden sm:inline">SmartPharm</span>
+          </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-1">
+            {menuItems.map((item) => (
               <Link
-                key={link.href}
-                to={link.href}
-                className="text-gray-300 hover:text-white font-medium transition-colors"
+                key={item.path}
+                to={item.path}
+                className="px-3 py-2 rounded-md text-sm hover:bg-slate-700 transition"
               >
-                {link.label}
+                {item.label}
               </Link>
             ))}
           </div>
 
-          {/* Auth Section */}
-          <div className="hidden md:flex items-center gap-4">
-            {user ? (
-              <>
-                {/* Admin Dashboard - Only visible to admin/super */}
-                {isAdmin && (
-                  <Link
-                    to="/admin/dashboard"
-                    className="text-gray-300 hover:text-white transition-colors"
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
-
-                {/* User Dashboard - Visible to ALL logged in users */}
-                <Link
-                  to="/user/dashboard"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Dashboard
-                </Link>
-
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  Register
-                </Link>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  Login
-                </Link>
-              </>
-            )}
+          {/* User & Mobile Menu */}
+          <div className="flex items-center space-x-4">
+            <div className="hidden sm:flex items-center space-x-2 text-sm">
+              <span className="text-gray-300">{user?.name}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-slate-700 rounded-md transition"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="md:hidden p-2 hover:bg-slate-700 rounded-md"
+            >
+              {open ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-white"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
 
-        {/* Mobile Navigation */}
-        {isOpen && (
+        {/* Mobile Menu */}
+        {open && (
           <div className="md:hidden pb-4 space-y-2">
-            {navLinks.map((link) => (
+            {menuItems.map((item) => (
               <Link
-                key={link.href}
-                to={link.href}
-                className="block px-4 py-2 text-gray-300 hover:bg-gray-800 rounded transition-colors"
-                onClick={() => setIsOpen(false)}
+                key={item.path}
+                to={item.path}
+                className="block px-3 py-2 rounded-md hover:bg-slate-700 transition"
+                onClick={() => setOpen(false)}
               >
-                {link.label}
+                {item.label}
               </Link>
             ))}
-            {user && user.emailVerified ? (
-              <>
-                {/* Admin Dashboard - Only visible to admin/super on mobile */}
-                {isAdmin && (
-                  <Link
-                    to="/admin/dashboard"
-                    className="block px-4 py-2 text-gray-300 hover:bg-gray-800 rounded transition-colors"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
-                )}
-
-                {/* User Dashboard - Visible to ALL logged in users on mobile */}
-                <Link
-                  to="/user/dashboard"
-                  className="block px-4 py-2 text-gray-300 hover:bg-gray-800 rounded transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Dashboard
-                </Link>
-
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-gray-800 rounded transition-colors flex items-center gap-2"
-                >
-                  <LogOut size={18} />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/login"
-                className="block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded transition-colors font-medium text-center"
-                onClick={() => setIsOpen(false)}
-              >
-                Login
-              </Link>
-            )}
           </div>
         )}
       </div>
     </nav>
   );
 };
+
+export default Navigation;

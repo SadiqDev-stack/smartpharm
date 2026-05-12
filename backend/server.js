@@ -16,12 +16,14 @@ import { useLimiter } from "./utilities/general.js";
 import userRouter from "./routers/user.js";
 import contactRouter from "./routers/contact.js";
 import assistantRouter from "./routers/assistant.js";
+import productRouter from "./routers/product.js";
+import loanRouter from "./routers/loan.js";
+import patientRouter from "./routers/patient.js";
+import invoiceRouter from "./routers/invoice.js";
 
 const app = express();
 
 const { PORT = 8080, NODE_ENV = "development" } = process.env;
-
-
 
 mongoose.set("bufferCommands", false);
 
@@ -78,6 +80,12 @@ app.use('/api/user/logout', userRouter); // logout dont need db connection
 app.use("/api/user", dbHandler, userRouter);
 app.use("/api/contact", dbHandler, contactRouter);
 app.use("/api/assistant", dbHandler, assistantRouter);
+
+// Pharmacy Module Routes (require auth via dbHandler)
+app.use("/api/products", dbHandler, productRouter);
+app.use("/api/loans", dbHandler, loanRouter);
+app.use("/api/patients", dbHandler, patientRouter);
+app.use("/api/invoices", dbHandler, invoiceRouter);
 
 // ======================
 // Message Route

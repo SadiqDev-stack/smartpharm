@@ -2,10 +2,10 @@
 import { Router } from "express";
 import { assistantController } from "../controllers/assistantController.js";
 
-const app = Router();
+const router = Router();
 
 // AI assistant routes
-app.post("/", assistantController.getAssistantResponse);
-app.post("/chat", assistantController.getUserChat);
+router.post("/", assistantController.getAssistantResponse);
+router.post("/chat", assistantController.getUserChat);
 
-export default app;
+export default router;

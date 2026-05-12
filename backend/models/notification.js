@@ -1,39 +1,24 @@
 import mongoose, { Schema, model } from "mongoose";
-import mogoose from "mongoose";
-import { generateUniqueId } from "../utilities/general.js";
 import { defaultSchema } from "../utilities/models.js";
+
 const { ObjectId } = mongoose.Types;
 
-// • title: string                                                             │
-// │ • description: string                                                       │
-// │ • flag: enum(info, warning, error, success)                                 │
-// │ • from: string                                                              │
-// │ • seen: boolean                                                             │
-// │ • id: string                                                                │
-// │ • userId: reference
-
-const Notification = new Schema({
-  title: {
-    type: String,
-    required: true,
+const NotificationSchema = new Schema(
+  {
+    title: { type: String, required: true },
+    description: String,
+    type: { type: String, enum: ["info", "warning", "error", "success"], default: "info" },
+    category: { type: String, enum: ["expiry", "payment_due", "low_stock", "patient_update", "system"] },
+    sourceId: { type: ObjectId, ref: "smartpharm_product" },
+    isRead: { type: Boolean, default: false },
+    expiresAt: Date,
+    ...defaultSchema("Notification"),
   },
+  { timestamps: true }
+);
 
-  flag: {
-    type: String,
-    enum: ["info", "warning", "error", "success", "urgent"],
-  },
+NotificationSchema.index({ userId: 1, isRead: 1 });
+NotificationSchema.index({ createdAt: -1 });
+NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-  from: {
-    type: String,
-    enum: ["assistant", "system", "admin"],
-  },
-
-  seen: {
-    type: Boolean,
-    default: false,
-  },
-
-  ...defaultSchema("Notification"),
-});
-
-export default model("smartpharm_notification", Notification);
+export default model("smartpharm_notification", NotificationSchema);

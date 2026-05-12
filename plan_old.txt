@@ -1,0 +1,570 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                     SMART PHARM - PHARMACY INVENTORY SYSTEM                   ║
+║                           Complete Architecture Guide                         ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+📋 PROJECT OVERVIEW
+───────────────────────────────────────────────────────────────────────────────
+SmartPharm is a comprehensive inventory management system for pharmacy shops with:
+  • Offline-first capability with automatic sync when online
+  • AI integration for medicine scanning and recommendations
+  • Patient and loan management with payment tracking
+  • Expiry notifications and inventory alerts
+  • Multi-user support with role-based access control
+
+TECH STACK: MERN (MongoDB, Express.js, React.js, Node.js) + IndexedDB + LocalStorage
+
+
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                            PART 1: KEY FEATURES                              ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+1. 💊 INVENTORY MANAGEMENT
+   - Store medicines/products with detailed dosage information
+   - Track price history with updates and breakdowns
+   - Monitor stock levels and trigger low-stock alerts
+   - Support multiple units (sachet, box, bottle, capsule, etc.)
+
+2. 📄 INVOICE MANAGEMENT
+   - Create purchasing & selling invoices
+   - Add/remove items dynamically with price adjustments
+   - Mark invoices as completed with timestamps
+   - Track customer details and payment status
+
+3. 💰 LOAN TRACKING
+   - Record loans to patients with product lists and amounts
+   - Payment breakdown tracking with multiple payment channels
+   - Mark partial or full payments with automatic balance calculation
+   - Payment notifications for overdue loans
+
+4. 👥 PATIENT MANAGEMENT
+   - Store recurring patient profiles with medical history
+   - Track dosage schedules and mark completion status
+   - Record health metrics (BP, weight, sugar level, pregnancy status)
+   - Resolution tracking with snapshot data on patient recovery
+
+5. ⏰ EXPIRY MANAGEMENT
+   - Automatic notifications for products expiring within 1 year
+   - Color-coded expiry status (green/yellow/red)
+   - Re-notification system for unresolved expiry items
+   - Historical expiry tracking
+
+6. 🤖 AI INTEGRATION
+   - Medicine image scanning for product identification
+   - Dosage suggestions based on patient conditions
+   - Automated recommendations (best sellers, similar medicines)
+   - Description generation from product names and characteristics
+
+7. 📊 ANALYTICS & INSIGHTS
+   - Dashboard with recent activity (5 latest events)
+   - Statistics aggregation (total patients, loans, revenue)
+   - Smart suggestions (overdue loans, expiring products, volatile prices)
+   - Seasonal trend analysis from historical data
+
+8. 🔌 OFFLINE-FIRST ARCHITECTURE
+   - Complete offline functionality with IndexedDB
+   - Automatic sync queue when connection restored
+   - Local image storage with media manager
+   - Configuration caching in LocalStorage
+
+9. 📤 IMPORT/EXPORT
+   - Export shop data as JSON backup
+   - Import data with conflict resolution
+   - Bulk product/patient data import
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PART 2: DATA MODELS (MongoDB Collections)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GENERAL KEYS (All Models)                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • id (unique identifier)                                                    │
+│ • createdAt (timestamp)                                                     │
+│ • updatedAt (timestamp)                                                     │
+│ • createdBy (user reference)                                                │
+│ • description (text)                                                        │
+│ • isImported (boolean)                                                      │
+│ • type (string)                                                             │
+│ • mediaSource (string - URL or localMedia:id.png)                           │
+│ • expiry (date)                                                             │
+│ • expiryCount (number)                                                      │
+│ • syncInfo: { dataUploaded: boolean, mediaUploaded: boolean }               │
+│ • userId (reference)                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PRODUCT / MEDICINE SCHEMA                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • name: string (required, unique)                                           │
+│ • description: string (optional)                                            │
+│ • dosage: {                                                                 │
+│     pregnantAllowed: boolean,                                               │
+│     sensitive: boolean (default false),                                     │
+│     breakdown: [{                                                           │
+│       label: string (eg "adult"),                                           │
+│       description: string (eg "2 times a day"),                             │
+│       age: string (eg "12 above")                                           │
+│     }]                                                                      │
+│   }                                                                         │
+│ • type: enum(injection, syrup, drop, cream, inhaler, tin, drip, item)      │
+│ • relatedProduct: [productId]                                               │
+│ • price: [{                                                                  │
+│     value: number,                                                          │
+│     label: enum(sachet, capsule, box, bottle, ample, ointment, item)         │
+│   } ]
+    pinned: {
+        type: Boolean,
+        default: true
+    },
+                                                                │
+│ • invoicingCount: number (default 0)                                        │
+│ • priceUpdateBreakdown: [{ date: date, price: number }]                     │
+│ • mediaSource: string (optional)                                            │
+│ • expiryDate: date (optional)                                               │
+│ • expiryCount: number (default 0)                                           │
+│ • stock: number (current inventory)                                         │
+│ • unit: string (measurement unit)                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PATIENT SCHEMA                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • name: string (required)                                                   │
+│ • id: string (unique)                                                       │
+│ • age: string (required - infant/child/teen/adult)                          │
+│ • phone: string (optional)                                                  │
+│ • returnings: number (default 0, counter)                                   │
+│ • dosageBreakdown: [{                                                       │
+│     label: string,                                                          │
+│     date: date,                                                             │
+│     completed: boolean                                                      │
+│   }]                                                                        │
+│ • condition: string (optional - malaria, etc)                               │
+│ • healthData: {                                                             │
+│     weight: number,                                                         │
+│     bp: string,                                                             │
+│     isPregnant: boolean,                                                    │
+│     sugarLevel: number,                                                     │
+│     infectious: boolean,                                                    │
+│     diabetesLevel: string                                                   │
+│   }                                                                         │
+│ • gender: enum(male, female, other) default male                            │
+│ • description: string (treatment notes)                                     │
+│ • resolutionBreakDown: [{                                                   │
+│     label: string,                                                          │
+│     date: date,                                                             │
+│     patientData: object                                                     │
+│   }]                                                                        │
+│ • loanId: reference to Loan                                                 │
+│ • totalLoans: number                                                        │
+│ • totalSum: number                                                          │
+│ • location: string (optional)                                               │
+│ • resolved: boolean (default false)                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LOAN SCHEMA                                                                 │
+├ new id notify user when loan is high or when is getting old and erson don’t pay ─────────────────────────────────────────────────────────────────────────────┤
+│
+const Loan = new Schema({
+ from: {
+    type: ObjectId,
+    ref: "Patient"
+ },
+ name: {
+    type: String,
+    unique: true
+ },
+ gender: {
+    type: String,
+    enums: ["male", "female"]
+ },
+ phone: {
+    type: String,
+    maxLength: 12,
+    required: true
+ },
+ location: {
+    type: String,
+    default: 'N/A'
+ },
+ loanBreakDown: {
+    type: [{
+    amount: Number,
+    priceRemaining: {
+        type: Number,
+        default: 0
+    },
+    payed: {
+        type: Boolean,
+        default: false
+    },
+    productName: String,
+    quantitiy: String,
+    description: String,
+    date: {
+        type: Date,
+        default: Date.now()
+    },
+    id: generateUniqueId("loanForDay")
+}],
+maxLength: maxLoanHistoryLength,
+default: []
+ },
+ amountBreakDown: {
+    totalLoanCost: Number,
+    totalAmountPayed: Number
+ },
+ paymentBreakDown: [{
+    date: {
+        type: Date,
+        default: Date.now()
+    },
+    amountPaid: Number,
+    channel: {
+        type: String // bank transfer , cash and who bring 
+    },
+    loansCovered: [String] // id of loan breakdown payed including partial
+ }]
+ 
+})
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ INVOICE SCHEMA                                                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+
+const Invoice = new Schema({
+  totalSum: Number,
+  items: {
+    type: [
+      {
+        // optional
+        productId: {
+          type: ObjectId,
+          ref: "Product",
+        },
+        qunatitiy: String,
+        productName: String,
+        price: Number,
+      },
+    ],
+    default: [],
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+  completedAt: {
+    type: Date,
+  },
+  name: {
+    type: String,
+    default: "",
+  },
+
+  type: {
+    type: [String],
+    enums: ["purchasing", "saling"],
+  },
+
+  // optinal for saling
+  customerDetails: {
+    type: {
+      name: {
+        type: String,
+      },
+      date: {
+        type: Date,
+        default: Date.now(),
+      },
+      amountPayed: Number,
+    },
+  },
+
+  ...defaultSchema("Invoice"),
+});
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ STAT SCHEMA (Aggregated Data)                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • products: { total, expired, invoiced, lowStock }                          │
+│ • loans: { total, sum, resolved, unresolved }                               │
+│ • patient: { resolved, growth: {teen, adult, infant}, gender stats }        │
+│ • invoice: { total, resolved, items, revenue }                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ NOTIFICATION SCHEMA                                                         │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ • title: string                                                             │
+│ • description: string                                                       │
+│ • flag: enum(info, warning, error, success)                                 │
+│ • from: string                                                              │
+│ • seen: boolean                                                             │
+│ • id: string                                                                │
+│ • userId: reference                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐user schema 
+ {
+    name: {
+      type: String,
+      required: true,
+      maxLength: 200,
+      trim: true,
+      lowercase: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      maxLength: 200,
+      lowercase: true,
+    },
+
+    active: {
+      type: Boolean,
+      default: true,
+    },
+
+    activationMessage: {
+      type: String,
+      lowercase: true,
+    },
+
+    phone: {
+      type: String,
+      required: true,
+      unique: true,
+      maxLength: 200,
+    },
+    accountMode: {
+      type: String,
+      enum: ["live", "offline"],
+    },
+    password: {
+      type: String,
+      required: true,
+      maxLength: 1000,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      default: "male",
+    },
+    state: {
+      type: String,
+      required: true,
+      lowercase: true,
+    },
+    role: {
+      type: String,
+      enum: ["admin", "user", "super"],
+      default: "user",
+    },
+    package: {
+      type: String,
+      default: defaultPackages[0].name,
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+      default: Date.now(),
+    },
+
+    loginFailAttempt: {
+      type: Number,
+      max: +MAX_LOGIN_FAIL_ATTEMPT,
+      default: 0,
+    },
+    lastFailedLogin: {
+      type: Date,
+      default: Date.now(),
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now(),
+      immutable: true,
+    },
+
+    updatedAt: {
+      type: Date,
+      default: Date.now(),
+    },
+
+    wallets: {
+      type: [
+        {
+          accountNumber: String,
+          accountName: String,
+          bankName: String,
+        },
+      ],
+      default: [],
+    },
+
+    passCode: {
+      type: String,
+      maxLength: 4,
+      default: "0000",
+    },
+
+    address: {
+      type: String,
+      required: true,
+    },
+
+    lastFunding: {
+      type: Date,
+      default: Date.now(),
+    },
+
+    totalFunding: {
+      type: Number,
+      default: 0,
+    },
+
+    storage: {
+      phoneNumbers: [String],
+      default: {
+        phoneNumbers: [],
+      },
+    },
+
+    stats: {
+      type: {
+        totalLoans: Number,
+        totalPatients: Number,
+        totalInvoice: Number,
+        totalProduct: Number,
+        totalNotifications: Number,
+      },
+      default: {
+        totalLoans: 0,
+        totalPatients: 0,
+        totalInvoice: 0,
+        totalProduct: 0,
+        totalNotifications: 0,
+      },
+    },
+
+    shopDescription: {
+      name: String,
+      description: String,
+      type: {
+        enums: ["small", "medium", "enterprise"],
+      },
+    },
+  },
+
+Pages
+Auth: login or sign up, you must have account to use it , if you enter dashboard or protected route , it checks if auth date ( last login ) >= a month, then check if not logged in recently or account not found it logs out and ask you to religion session expired , or if info like email found , it ask password and loggs in ) , it make sure account must be logged in and verified 
+
+Dashboard: 
+Has navs ( product, loan, setting, invoice, patient , logout , subscription , analytics , expiry )
+Analytics (
+ Recent history – any 5 things, ( expiry  , patient, loan ) 
+Expiry alert , recent notifications 
+Stats ( total patient, total loan, …. From user.stat ) 
+Smart suggestion ( ai generated or computed – like best medicine for month,  loan need to get paid >older ones, product about to expire, volatile product ) 
+Welcome greetings ( base on day ) 
+
+In other pages like product 
+We have view stat which open modal and give us stat like total medicine etc 
+
+Product page
+Has route /product/view /product/update /product/delete /product/list
+Search bar ( search by name , id,  > nested by description ( opens special input to search, this breaks keyword into array and match them , if found any keyword matching it get it , if not found,, it try use ai to first get product names , then search the names then prompt ai again to bring top , filter (
+Primary – type 
+Advance – pops bar to search ->
+Expiry – sort by most about to expire 
+Volatile – checks price update array length of expiry count  and sort 
+Dosage – has button suggestion -> infant, adult, old, child, and isPregnantAllowed – default any –{ check any}, has button suggestion true false )
+Edit: open modal to edit, image update optional, pricing update get pushed if we update price,  modal has suggestion button like for dosage , type – update uodated at, prices suggest unit per box , per half, per sachet etc , related Product opens search to search and add , saving update updatedAt, and tries to send changes to API if online else update indexDb and push to sync queue. 
+Adding medicine: this ask 
+Name, description, dosage(is pregnant allowed, is it sensitive like is it sallable to everybody, breakdown – you can add label(infant, maybe 18yo etc) and description ( 2ml 3times etc, page has suggestion , but you can skip ), you then choose type, price ( label(1/2 sachet etc), unit naira), can upload image, add related product by searching ), ai help suggest ndescriptuon by name, dosage by description, related product [ base on name – we have global context medicine names which we can use for suggestion we just do product mapping name ) – saving save in indexeddb image and json and sync online – queue if fail save notifications and queue issues > can resolve or mark as complete later ) ,
+Deleting is easy it require data to do with that 
+Sync queue 
+the sync queue checks if something is already created it then update in db, if not it then create it in the db, after that when saving sync we receive (request method, request URL, requestType(json etc), requestCallback-this is global function name – we use window[funcName] then it can perform task like updating UI or db after syncing; mostly update db 
+
+Loan page: 
+Has page /loan/update /loan/view /loan/delete
+Search field ( name, phone address ) 
+Filter ( gender , amount>sort(use Boolean button toggle use bg for ui)
+The ui 
+When we search the person[ it show person description and amount, total loan , total payment, last paid ) we click view loans it opens /view and we can see list of either loan or payment we use button to toggle 
+Loan break down(amount, payed, description, date)  , if person pay, we click mark as paid and it ask us how much he paid, then we enter and it mark as paid , and it create and push new loan with price remaining that is not paid, it then store in db and sync ( mark paid by id the old, push new with new id and index ), description is auto generated paid bla bla, we also push to payment breakdown , if we pay the payment breakdown is automatically created and added, same goes to payment breakdown ,the ui shows everything 
+For updating 
+It opens /update you can search breakdown of loan and search then update places and save 
+
+For deleting requires data , you can delete loan or payment , or you can delete whole person loan 
+
+Invoice 
+Has search bar to search by ( name, id , customer details ) 
+Filter ( completed type, sort – totalSum, completed at ), 
+The view sheow ( name, type, customer details , total items, completed, completed at ) 
+/view When opened it show ( full details like list of items )
+
+/Update 
+Allow you to update name , mark as  completed. , update item and quantity / price , you can add update , or remove quantity – requires data ) 
+/ Delete this requires data 
+/ creating invoices 
+Ask name and type, then base on type can ask customer details 
+Then it opens a modal to select product base on list, we select and it add if not found we manually type and add product details, we then enter quantity and price then we hit save , create and sync later 
+ 
+
+Patient 
+/view 
+Search(name, …defail, toggle gender or resolved l it get view with patient detail,.resolved , total dosage, total resolution breakdown, you can click view and has two toggle button ( resolution listing all, dosage listing all ) 
+Dosage we get 
+Label – like 5ml of pcm.injection 
+Date 
+Completed – if completed ui show something like cancelled as low opacity 
+/ We can add dosage create new id date.now and add details , then later if patient arrives we tigk and complete, if all dosage completed marked , ui mark as resolved if asked us and no any loan , and it moves ,.as we mark it upsat returnings by incrementing it , as we mark resolved it capture snapshot data and save in resolution break down 
+/Update 
+We can update name description or open and update or delete breakdowns(require data ) ,
+/delete can delete breakdown or whole patient requires data
+
+
+
+Expiry 
+Has filter and search bar, this sort product base on the ones that are about to expire , lost them from product and show red green or yellow within range of 1year , if more is green , this track expiry , you can update expiry of medicine or product here 
+
+In backend a ping is sent to /check expiry that check expiry less than 1year and notify then create expiry record with productId, last notified and is notified , if notified after month and it never get updated or sold them it will re notify again till you update it 
+
+Notification 
+You can search by title, mark all as read or , sort by flag, and it has url where you can go to view issue and data stored  , you can also click delete old notification, we get ping to backend /delete-ols that clear old notification also 
+Sync 
+You can sort base on navs ( product, invoice etc , completed, pending or initiated , conflicted ) , you can stop sync or delete completed sync it has /delete need data , and /stop don’t need data 
+
+Stat
+Shows your stat at user.stat 
+Suggest you medicine with stat 
+Suggest you loans that need to get paid 
+Suggest you ideas 
+Suggest you expired time and more 
+
+Assistant: 
+If we select text , there is ai symbol at top base on mouse position and I select event, we can click to open modal and ask ai, any text we select it keeps the current data of that component in a context called aiSelectionContext, and the ai read and answer our questions base on it as we promote, the ainbar is simple just like Whatsapp chat bar, we can chat ai, we can pass in context as selecting ( product, analytics, invoice ) using it it can search and answer us , ai feature is only available online , ai can suggest medicine for a case or condition also , we can ask ai to give us more stat etc
+Auth – once we open app and logged in , it ask us pass code then we enter we can toggle asking that also, if last login date >= 30days it must insist us to login again and authenticate, if not on every 20second it send request if app is open to update our user info so it knows whether we don’t exceed our package limit , account restrictions etc. , it uses indexeddb and our code is oculsified or back engineered so no one can escape 
+Local storage: react need to fetch used info and load page we must intercept API to respond on offline with local DB data , and the local DB structure is like this { patient, media, loan, user, …  } we can update it using some utils and hooks like useDb{store,update,etc}), for imahs upload and storage we use first if image is up loaded we store using indexeddb and replace url, to {items name}imageNameDate.now().ext, we then later call /API/media/upload and pass blob + validationCb, callBack name, this call back some function in backend to validate eg if is product we must pass in data like id, then check it exit and uploaded json, before we upload it media and at last callBack to update media url ) , so for cloudinary that we use to upload , we merge using loaclDbId_cloudinaryext this can help us later check DB by splitting _, I f not found we wait image load using mobile data and if loaded then we store blob and update the localDb data and name 
+Sync need resolution function, callback function , and other data 
+For frontend our routes should be clear for user we get /user/dashboard , /used/product etc so we can show dynamic navs base on path etc, we must practice utilities and mvc , models middle wares , routes , controllers , and code must not be long but meaningful and very modular
+We use axios for fetching, dexie.js for indexeddb , express for backend , and for react it should be pwa app lffline first, navigating with consistency like replace, or if navigated it won’t reload pages already opened etc for mvp is user focused app 
+, we must adhere to ui ux principle like primary and secondary color and choose best ui design by professionals , and we must have color theme for medicine thing like green blue white or dark theme , we must implement dark theme toggline with auto phone theme detection 
+The models might not be clear enough but we improve things as we build not just by documentation 
+
