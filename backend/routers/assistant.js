@@ -7,5 +7,6 @@ const router = Router();
 // AI assistant routes
 router.post("/", assistantController.getAssistantResponse);
 router.post("/chat", assistantController.getUserChat);
+router.post('/assistant', assistantController.getAssistantResponse);
 
 export default router;

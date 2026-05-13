@@ -61,7 +61,12 @@ export const userController = {
         throw new req.AppError("invalid phone number");
       }
 
-      if(!shopDescription || !shopDescription.name || !shopDescription.description){
+      if(
+        !shopDescription ||
+        !shopDescription.name ||
+        !shopDescription.description ||
+        !shopDescription.type
+      ){
         throw new req.AppError("invalid shop description")
       }
 

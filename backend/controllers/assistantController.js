@@ -6,13 +6,13 @@ export const assistantController = {
   // AI assistant for admin (helps draft responses)
   async getAssistantResponse(req, res, next) {
     try {
-      const { message: userPrompt, contactData } = req.body;
+      const { message: userPrompt } = req.body;
 
       if (!userPrompt || typeof userPrompt !== "string") {
         throw new req.AppError("invalid user message!");
       }
 
-      const prompt = `User message: ${userPrompt}\nContact info: ${JSON.stringify(contactData || {})}`;
+      const prompt = `User message: ${userPrompt}\n`;
 
       Assistant.getResponse(
         req,

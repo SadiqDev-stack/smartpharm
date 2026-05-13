@@ -65,7 +65,7 @@ const Navigation = ({ user, onLogout }) => {
     if (!user) {
       // Public navigation
       return [
-        { label: 'Home', href: '/', isScroll: false },
+        { label: 'Home', href: '#home', isScroll: true },
         { label: 'Features', href: '#features', isScroll: true },
         { label: 'Benefits', href: '#benefits', isScroll: true },
         { label: 'Pricing', href: '#pricing', isScroll: true },
@@ -180,10 +180,10 @@ const Navigation = ({ user, onLogout }) => {
                 </div>
               ) : (
                 <>
-                  <Link to="/auth/login" className="px-4 py-2 text-[#64748B] font-semibold hover:text-[#0F6E8A] transition">
+                  <Link to="/auth?mode=login" className="px-4 py-2 text-[#64748B] font-semibold hover:text-[#0F6E8A] transition">
                     Sign In
                   </Link>
-                  <Link to="/auth/register" className="px-5 py-2 bg-[#0F6E8A] text-white rounded-lg font-semibold hover:bg-[#0A4D62] transition-all hover:shadow-md">
+                  <Link to="/auth?mode=signup" className="px-5 py-2 bg-[#0F6E8A] text-white rounded-lg font-semibold hover:bg-[#0A4D62] transition-all hover:shadow-md">
                     Get Started
                   </Link>
                 </>
@@ -241,10 +241,10 @@ const Navigation = ({ user, onLogout }) => {
 
               {!user && (
                 <div className="pt-2 space-y-2 border-t border-[#E2E8F0]">
-                  <Link to="/auth/login" className="block px-3 py-2 text-center text-[#0F6E8A] font-semibold">
+                  <Link to="/auth?mode=login" className="block px-3 py-2 text-center text-[#0F6E8A] font-semibold">
                     Sign In
                   </Link>
-                  <Link to="/auth/register" className="block px-3 py-2 text-center bg-[#0F6E8A] text-white rounded-lg font-semibold">
+                  <Link to="/auth?mode=signup" className="block px-3 py-2 text-center bg-[#0F6E8A] text-white rounded-lg font-semibold">
                     Get Started
                   </Link>
                 </div>

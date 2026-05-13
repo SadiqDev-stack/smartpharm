@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/api";
 
 export const AuthContext = createContext();
 
@@ -7,23 +7,29 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+  const [unlocked, setUnlockedState] = useState(() => {
+    return typeof window !== "undefined" && window.sessionStorage?.getItem("unlocked") === "true";
+  });
 
   useEffect(() => {
-    // Check if user is logged in on mount
     checkAuth();
   }, []);
 
+  const saveUnlocked = (value) => {
+    setUnlockedState(value);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("unlocked", value ? "true" : "false");
+    }
+  };
+
   const checkAuth = async () => {
     try {
-      const response = await axios.get(`${API_URL}/user/profile`, {
-        withCredentials: true,
-      });
+      const response = await api.get("/user/profile");
       setUser(response.data.user || response.data.data?.user || null);
       setError(null);
     } catch (err) {
       setUser(null);
+      saveUnlocked(false);
     } finally {
       setLoading(false);
     }
@@ -32,12 +38,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_URL}/user/authenticate`,
-        { email, password },
-        { withCredentials: true }
-      );
-      setUser(response.data.user || response.data.data?.user || null);
+      const response = await api.post("/user/authenticate", { email, password });
+      const userData = response.data.user || response.data.data?.user || null;
+      setUser(userData);
+      saveUnlocked(false);
       setError(null);
       return response.data;
     } catch (err) {
@@ -52,10 +56,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/user/register`, userData, {
-        withCredentials: true,
-      });
+      const response = await api.post("/user/register", userData);
       await checkAuth();
+      saveUnlocked(false);
       setError(null);
       return response.data;
     } catch (err) {
@@ -69,8 +72,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${API_URL}/user/logout`, {}, { withCredentials: true });
+      await api.post("/user/logout");
       setUser(null);
+      saveUnlocked(false);
       setError(null);
     } catch (err) {
       console.error("Logout error:", err);
@@ -81,9 +85,11 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     error,
+    unlocked,
     login,
     register,
     logout,
+    setUnlocked: saveUnlocked,
     isAuthenticated: !!user,
   };
 
