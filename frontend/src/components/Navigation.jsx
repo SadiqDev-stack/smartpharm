@@ -1,5 +1,5 @@
 // frontend/src/components/Navigation.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Package, 
@@ -19,13 +19,17 @@ import {
   Bell,
   ShoppingCart
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-const Navigation = ({ user, onLogout }) => {
+const Navigation = ({onLogout }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { user, isLoading } = useAuth();
+  
 
   useEffect(() => {
     const handleScroll = () => {

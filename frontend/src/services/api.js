@@ -4,7 +4,7 @@ import axios from "axios";
 const API_BASE =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD
-    ? "https://sadiqcapsapi.vercel.app/api"
+    ? "https://smartpharmapi.vercel.app/api"
     : "http://localhost:8080/api");
 
 axios.defaults.withCredentials = true;

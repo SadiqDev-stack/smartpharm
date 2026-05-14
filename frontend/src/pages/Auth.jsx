@@ -53,6 +53,7 @@ const Auth = () => {
     address: '',
     gender: 'male',
     country: 'nigeria',
+    state: 'borno', 
     password: '',
     confirmPassword: '',
     passCode: '',
@@ -73,22 +74,20 @@ const Auth = () => {
 
     try {
       const response = await login(loginData.email, loginData.password);
-      if (response.redirect) {
-        if (response.redirect.includes("/message")) {
-          window.location.href = response.redirect;
-        } else {
-          navigate(response.redirect);
-        }
-      } else {
-        if (response.message) {
-          setErrors({ loginSuccess: response.message });
-          setTimeout(() => {
-            navigate(unlocked ? "/dashboard" : "/unlock");
-          }, 2000);
-        } else {
-          navigate(unlocked ? "/dashboard" : "/unlock");
-        }
+      const { success, message, redirect } = response;
+
+      if(success) {
+        setErrors({ loginSuccess: message || "Login successful!" });
+      }else {
+        setErrors({ login: message || "Login failed. Please try again." });
       }
+
+      if(redirect) {
+        setTimeout(() => {
+          navigate(redirect, { replace: true });  
+        }, 3000);
+      }
+
     } catch (error) {
       setErrors({
         login: error.response?.data?.message || "Login failed. Please try again.",
@@ -140,23 +139,19 @@ const Auth = () => {
       void confirmPassword;
       const response = await register(registerPayload);
 
-      if (response.redirect) {
-        if (response.redirect.includes("/message")) {
-          window.location.href = response.redirect;
-        } else {
-          navigate(response.redirect);
-        }
-      } else {
-        setErrors({
-          registerSuccess:
-            response.message ||
-            "Registration successful! Please check your email for verification.",
-        });
-        setTimeout(() => {
-          setSearchParams({ mode: "login" });
-          setErrors({});
-        }, 3000);
+      const { success, message, redirect } = response;
+      if(success) {
+        setErrors({ registerSuccess: message || "Registration successful! Please log in." });
+      }else {
+        setErrors({ register: message || "Registration failed. Please try again." });
       }
+
+      if(redirect) {
+        setTimeout(() => {
+          navigate(redirect, { replace: true });  
+        }, 3000);
+      } 
+
     } catch (error) {
       setErrors({
         register: error.response?.data?.message || "Registration failed. Please try again.",
@@ -551,6 +546,23 @@ const Auth = () => {
                         <option value="kenya">Kenya</option>
                         <option value="south africa">South Africa</option>
                       </select>
+                    </div>
+                  </div>
+
+                      <div>
+                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      state
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <input
+                        type="text"
+                        required
+                        value={registerData.state}
+                        onChange={(e) => setRegisterData({...registerData, state: e.target.value})}
+                        className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        placeholder="Borno"
+                      />
                     </div>
                   </div>
                   
