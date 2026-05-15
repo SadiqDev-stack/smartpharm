@@ -18,7 +18,10 @@ export const userAPI = {
   login: (email, password) =>
     api.post("/user/authenticate", { email, password }),
   logout: () => api.post("/user/logout"),
-  getProfile: () => api.get("/user/profile"),
+  getProfile: () => {
+    
+    return api.get("/user/profile")
+  },
   register: (userData) => api.post("/user/register", userData),
 };
 

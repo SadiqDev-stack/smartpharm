@@ -13,70 +13,73 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Navigation from "./components/Navigation";
 import Contact from "./pages/Contact";
+import { StorageProvider } from "./context/StorageContext";
 
 const App = () => {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/message" element={<Message />} />
-          <Route path="/assistant" element={<Assistant />} />
-          <Route
-            path="/unlock"
-            element={
-              <ProtectedRoute>
-                <Unlock />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute>
-                <Products />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/patients"
-            element={
-              <ProtectedRoute>
-                <Patients />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/loans"
-            element={
-              <ProtectedRoute>
-                <Loans />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/invoices"
-            element={
-              <ProtectedRoute>
-                <Invoices />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <StorageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/message" element={<Message />} />
+            <Route path="/assistant" element={<Assistant />} />
+            <Route
+              path="/unlock"
+              element={
+                <ProtectedRoute>
+                  <Unlock />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoute>
+                  <Products />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patients"
+              element={
+                <ProtectedRoute>
+                  <Patients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/loans"
+              element={
+                <ProtectedRoute>
+                  <Loans />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                <ProtectedRoute>
+                  <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </StorageProvider>
   );
 };
 
