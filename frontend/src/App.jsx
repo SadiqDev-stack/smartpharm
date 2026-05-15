@@ -17,9 +17,9 @@ import { StorageProvider } from "./context/StorageContext";
 
 const App = () => {
   return (
-    <StorageProvider>
-      <AuthProvider>
-        <BrowserRouter>
+    <BrowserRouter>
+      <StorageProvider>
+        <AuthProvider>
           <Navigation />
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -77,9 +77,9 @@ const App = () => {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </StorageProvider>
+        </AuthProvider>
+      </StorageProvider>
+    </BrowserRouter>
   );
 };
 

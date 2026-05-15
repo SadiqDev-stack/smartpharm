@@ -8,6 +8,7 @@ const Storage = {
   },
 
   setItem: (key, value) => {
+    if(!value) return
     if (typeof value == Object) value = JSON.stringify(value);
 
     localStorage.setItem(key, value);

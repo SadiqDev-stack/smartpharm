@@ -111,7 +111,7 @@ const Navigation = ({ onLogout }) => {
 
     const dynamicNav = [];
 
-    let nav;
+    let nav = [];
 
     if (user) {
       if (location.pathname.includes(`/${user.role}`)) {
@@ -129,12 +129,13 @@ const Navigation = ({ onLogout }) => {
       nav = publicNaviagtion;
     }
 
-    nav = { ...nav, ...publicNaviagtion };
+    nav = [...nav, ...publicNaviagtion ];
 
     return nav;
   };
 
   const navLinks = getNavLinks();
+  console.log(navLinks)
 
   return (
     <>

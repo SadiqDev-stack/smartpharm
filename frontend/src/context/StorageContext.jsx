@@ -2,7 +2,7 @@ import { createContext, useEffect, useState } from "react";
 import Storage from "../services/storage";
 
 let storageData = {
-  user: {},
+  user: null,
   name: "smartpharm",
   data: {
     products: [],
