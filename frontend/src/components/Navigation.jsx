@@ -1,5 +1,5 @@
 // frontend/src/components/Navigation.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Package,
@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import useStorage from "../hooks/useStorage";
+import { AuthContext } from "../context/AuthContext";
 
 const Navigation = ({ onLogout }) => {
   const [scrolled, setScrolled] = useState(false);
@@ -21,6 +22,9 @@ const Navigation = ({ onLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const {logout} = useContext(AuthContext)
+
+
 
   const { user } = useStorage();
 
@@ -129,7 +133,7 @@ const Navigation = ({ onLogout }) => {
       nav = publicNaviagtion;
     }
 
-    nav = [...nav, ...publicNaviagtion ];
+    nav = [...nav, ...dynamicNav ];
 
     return nav;
   };
@@ -158,11 +162,12 @@ const Navigation = ({ onLogout }) => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6 lg:gap-8">
-              {navLinks.map((link) =>
+              {navLinks.map((link, index) =>
                 link.isScroll ? (
                   <a
                     key={link.label}
                     href={link.href}
+                    key={index}
                     onClick={(e) =>
                       handleSmoothScroll(e, link.href.substring(1))
                     }
@@ -223,7 +228,7 @@ const Navigation = ({ onLogout }) => {
                         </Link>
                         <div className="border-t border-[#E2E8F0] my-1"></div>
                         <button
-                          onClick={onLogout}
+                          onClick={logout}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#EF4444] hover:bg-[#FEF2F2]"
                         >
                           <LogOut size={16} />
@@ -269,11 +274,12 @@ const Navigation = ({ onLogout }) => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-[#E2E8F0] shadow-lg animate-fade-in">
             <div className="px-4 py-3 space-y-2">
-              {navLinks.map((link) =>
+              {navLinks.map((link, index) =>
                 link.isScroll ? (
                   <a
                     key={link.label}
                     href={link.href}
+                    key={index}
                     onClick={(e) =>
                       handleSmoothScroll(e, link.href.substring(1))
                     }
@@ -343,7 +349,7 @@ const Navigation = ({ onLogout }) => {
                     Settings
                   </Link>
                   <button
-                    onClick={onLogout}
+                    onClick={logout}
                     className="w-full flex items-center gap-2 px-3 py-2 text-[#EF4444] rounded-lg hover:bg-[#FEF2F2]"
                   >
                     <LogOut size={18} />

@@ -18,10 +18,12 @@ export const userController = {
   async register(req, res, next) {
     try {
       for (const field in req.body) {
-        if (!["password", 'shopDescription', "stat"].includes(field) && req.body[field])
+        if (
+          !["password", "shopDescription", "stat"].includes(field) &&
+          req.body[field]
+        )
           req.body[field] = sanitizeInput(req.body[field]);
       }
-
 
       let {
         name,
@@ -31,7 +33,7 @@ export const userController = {
         phone,
         gender = "male",
         country = "nigeria",
-        shopDescription
+        shopDescription,
       } = req.body;
 
       if (name && name.length >= 100) {
@@ -47,11 +49,11 @@ export const userController = {
         });
       }
 
-      if(!address){
-        throw new req.AppError("address is invalid")
+      if (!address) {
+        throw new req.AppError("address is invalid");
       }
 
-      if (!name ||  !email || !email.includes("@")) {
+      if (!name || !email || !email.includes("@")) {
         throw new req.AppError(
           !name ? "invalid user name" : "invalid email address",
         );
@@ -61,17 +63,17 @@ export const userController = {
         throw new req.AppError("invalid phone number");
       }
 
-      if(
+      if (
         !shopDescription ||
         !shopDescription.name ||
         !shopDescription.description ||
         !shopDescription.type
-      ){
-        throw new req.AppError("invalid shop description")
+      ) {
+        throw new req.AppError("invalid shop description");
       }
 
-      if(!password){
-        throw new req.AppError("please provide a password")
+      if (!password) {
+        throw new req.AppError("please provide a password");
       }
 
       const existing = await User.findOne({ $or: [{ email }, { phone }] });
@@ -186,7 +188,6 @@ export const userController = {
       setCookie(res, "token", token, LOGIN_EXPIRE);
 
       delete user.password;
-      delete user.passCode;
 
       if (!user.emailVerified) {
         req.token = token;
@@ -206,7 +207,6 @@ export const userController = {
         });
       } else {
         delete user.password;
-        delete user.passCode;
         res.status(200).json({
           success: true,
           redirect: `/${user.role}/dashboard`,
@@ -226,8 +226,7 @@ export const userController = {
     try {
       const { user } = req;
       delete user.password;
-      delete user.passCode;
-      res.status(200).json({ success: true, user });
+      res.status(200).json({ success: true, data: { user } });
     } catch (er) {
       req.err = er;
       console.log(er);
@@ -240,7 +239,6 @@ export const userController = {
     try {
       const { user } = req;
       delete user.password;
-      delete user.passCode;
       delete user.kycDetails;
       res.status(200).json({ success: true, data: { user } });
     } catch (er) {
@@ -276,12 +274,10 @@ export const userController = {
         typeof newPassword !== "string" ||
         typeof passCode !== "string"
       ) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "invalid name or transaction pin!",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "invalid name or transaction pin!",
+        });
       }
 
       if (!email.includes("@") || newPassword.length < 8) {
@@ -367,7 +363,6 @@ export const userController = {
       );
 
       delete user.password;
-      delete user.passCode;
       delete user.apiKey;
       delete user.webhook;
       delete user.kycDetails;

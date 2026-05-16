@@ -1,5 +1,5 @@
 // frontend/src/pages/Auth.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -14,12 +14,11 @@ import {
   CheckCircle,
   AlertCircle,
   Loader,
-  Apple,
   ArrowRight,
   Store,
   FileText,
-  Globe
 } from 'lucide-react';
+import { StorageContext } from '../context/StorageContext';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -29,16 +28,24 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const { user } = useContext(StorageContext)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      if (unlocked) {
-        navigate("/dashboard");
+    if (isAuthenticated && user) {
+      // User is logged in, check if email is verified
+      if (user.emailVerified) {
+        // Email verified, check if unlocked
+        if (unlocked) {
+          navigate("/user/dashboard", { replace: true });
+        } else {
+          navigate("/unlock", { replace: true });
+        }
       } else {
-        navigate("/unlock");
+        // Email not verified, redirect to message page
+        navigate(`/message?title=Verify Your Email&description=Check your inbox for a verification link to complete your registration.&redirect=false`, { replace: true });
       }
     }
-  }, [isAuthenticated, unlocked, navigate]);
+  }, [isAuthenticated, unlocked, navigate, user]);
   
   // Form states
   const [loginData, setLoginData] = useState({
@@ -76,18 +83,21 @@ const Auth = () => {
       const response = await login(loginData.email, loginData.password);
       const { success, message, redirect } = response;
 
-      if(success) {
+      if (success) {
         setErrors({ loginSuccess: message || "Login successful!" });
-      }else {
+        // Wait for state to update, then navigate
+        if (redirect) {
+          setTimeout(() => {
+            if (redirect.startsWith("http")) {
+              window.location.href = redirect;
+            } else {
+              navigate(redirect, { replace: true });
+            }
+          }, 1000);
+        }
+      } else {
         setErrors({ login: message || "Login failed. Please try again." });
       }
-
-      if(redirect) {
-        setTimeout(() => {
-          navigate(redirect, { replace: true });  
-        }, 3000);
-      }
-
     } catch (error) {
       setErrors({
         login: error.response?.data?.message || "Login failed. Please try again.",
@@ -141,16 +151,20 @@ const Auth = () => {
 
       const { success, message, redirect } = response;
       if(success) {
-        setErrors({ registerSuccess: message || "Registration successful! Please log in." });
+        setErrors({ registerSuccess: message || "Registration successful! Please check your email." });
+        // Auto-redirect to message page if redirect is provided
+        if(redirect) {
+          setTimeout(() => {
+            if (redirect.startsWith("http")) {
+              window.location.href = redirect;
+            } else {
+              navigate(redirect, { replace: true });
+            }
+          }, 1500);
+        }
       }else {
         setErrors({ register: message || "Registration failed. Please try again." });
       }
-
-      if(redirect) {
-        setTimeout(() => {
-          navigate(redirect, { replace: true });  
-        }, 3000);
-      } 
 
     } catch (error) {
       setErrors({
@@ -175,20 +189,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--bg-light)] to-white flex items-center justify-center p-4">
       <div className="max-w-6xl w-full">
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Left Side - Info/Brand */}
-          <div className="hidden lg:flex flex-col justify-center p-8 bg-gradient-to-br from-[#0F6E8A] to-[#0A4D62] rounded-2xl text-white shadow-xl">
+          <div className="hidden lg:flex flex-col justify-center p-8 bg-gradient-to-br from-[var(--primary)] to-[var(--primary-dark)] rounded-2xl text-white shadow-xl">
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-6">
                 <Store className="w-8 h-8" />
-                <span className="text-2xl font-bold">Smart<span className="text-[#48B5C5]">Pharm</span></span>
+                <span className="text-2xl font-bold">Smart<span className="text-[var(--primary-light)]">Pharm</span></span>
               </div>
               <h2 className="text-3xl font-bold mb-4">
                 {isLogin ? 'Welcome Back!' : 'Join SmartPharm Today'}
               </h2>
-              <p className="text-[#48B5C5] mb-6">
+              <p className="text-[var(--primary-light)] mb-6">
                 {isLogin 
                   ? 'Sign in to manage your pharmacy inventory, track patients, and access AI-powered insights.'
                   : 'Create your account and start managing your pharmacy smarter, even offline.'}
@@ -225,7 +239,7 @@ const Auth = () => {
             <div className="mt-8 pt-8 border-t border-white/20">
               <div className="flex -space-x-2">
                 {[1,2,3,4].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-[#48B5C5] to-[#0F6E8A] border-2 border-white"></div>
+                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary)] border-2 border-white"></div>
                 ))}
               </div>
               <p className="text-sm mt-3">Trusted by 500+ pharmacies</p>
@@ -235,13 +249,13 @@ const Auth = () => {
           {/* Right Side - Form */}
           <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
             {/* Toggle Buttons */}
-            <div className="flex gap-2 p-1 bg-[#F8FAFC] rounded-xl mb-8">
+            <div className="flex gap-2 p-1 bg-[var(--bg-light)] rounded-xl mb-8">
               <button
                 onClick={() => handleFormToggle(true)}
                 className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
                   isLogin 
-                    ? 'bg-white text-[#0F6E8A] shadow-sm' 
-                    : 'text-[#64748B] hover:text-[#0F6E8A]'
+                    ? 'bg-white text-[var(--primary)] shadow-sm' 
+                    : 'text-[var(--text-muted)] hover:text-[var(--primary)]'
                 }`}
               >
                 Sign In
@@ -250,8 +264,8 @@ const Auth = () => {
                 onClick={() => handleFormToggle(false)}
                 className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
                   !isLogin 
-                    ? 'bg-white text-[#0F6E8A] shadow-sm' 
-                    : 'text-[#64748B] hover:text-[#0F6E8A]'
+                    ? 'bg-white text-[var(--primary)] shadow-sm' 
+                    : 'text-[var(--text-muted)] hover:text-[var(--primary)]'
                 }`}
               >
                 Sign Up
@@ -279,34 +293,34 @@ const Auth = () => {
               {isLogin ? (
                 <form onSubmit={handleLogin} className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="email"
                         required
                         value={loginData.email}
                         onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                        className="w-full pl-10 pr-4 py-2.5 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full pl-10 pr-4 py-2.5 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                         placeholder="you@example.com"
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Password
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type={showPassword ? 'text' : 'password'}
                         required
                         value={loginData.password}
                         onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                        className="w-full pl-10 pr-10 py-2.5 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full pl-10 pr-10 py-2.5 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                         placeholder="••••••••"
                       />
                       <button
@@ -315,9 +329,9 @@ const Auth = () => {
                         className="absolute right-3 top-1/2 transform -translate-y-1/2"
                       >
                         {showPassword ? (
-                          <EyeOff className="w-4 h-4 text-[#64748B]" />
+                          <EyeOff className="w-4 h-4 text-[var(--text-muted)]" />
                         ) : (
-                          <Eye className="w-4 h-4 text-[#64748B] blink-eye" />
+                          <Eye className="w-4 h-4 text-[var(--text-muted)] blink-eye" />
                         )}
                       </button>
                     </div>
@@ -354,34 +368,34 @@ const Auth = () => {
                 <form onSubmit={handleRegister} className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Full Name
                       </label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                         <input
                           type="text"
                           required
                           value={registerData.name}
                           onChange={(e) => setRegisterData({...registerData, name: e.target.value})}
-                          className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                          className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                           placeholder="John Doe"
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Phone Number
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                         <input
                           type="tel"
                           required
                           value={registerData.phone}
                           onChange={(e) => setRegisterData({...registerData, phone: e.target.value})}
-                          className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                          className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                           placeholder="08012345678"
                         />
                       </div>
@@ -389,28 +403,28 @@ const Auth = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="email"
                         required
                         value={registerData.email}
                         onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
-                        className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                         placeholder="you@example.com"
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Shop Name
                     </label>
                     <div className="relative">
-                      <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="text"
                         required
@@ -420,22 +434,22 @@ const Auth = () => {
                           shopDescription: {...registerData.shopDescription, name: e.target.value}
                         })}
                         className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-1 transition ${
-                          errors.shopName ? 'border-[#EF4444] focus:border-[#EF4444]' : 'border-[#E2E8F0] focus:border-[#0F6E8A]'
+                          errors.shopName ? 'border-[var(--accent-red)] focus:border-[var(--accent-red)]' : 'border-[var(--border)] focus:border-[var(--primary)]'
                         }`}
                         placeholder="Smart Pharmacy"
                       />
                     </div>
                     {errors.shopName && (
-                      <p className="text-xs text-[#EF4444] mt-1">{errors.shopName}</p>
+                      <p className="text-xs text-[var(--accent-red)] mt-1">{errors.shopName}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Shop Type
                     </label>
                     <div className="relative">
-                      <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <select
                         value={registerData.shopDescription.type}
                         onChange={(e) => setRegisterData({
@@ -446,7 +460,7 @@ const Auth = () => {
                           },
                         })}
                         className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-1 transition ${
-                          errors.shopType ? 'border-[#EF4444] focus:border-[#EF4444]' : 'border-[#E2E8F0] focus:border-[#0F6E8A]'
+                          errors.shopType ? 'border-[var(--accent-red)] focus:border-[var(--accent-red)]' : 'border-[var(--border)] focus:border-[var(--primary)]'
                         }`}
                       >
                         <option value="small">Small</option>
@@ -455,16 +469,16 @@ const Auth = () => {
                       </select>
                     </div>
                     {errors.shopType && (
-                      <p className="text-xs text-[#EF4444] mt-1">{errors.shopType}</p>
+                      <p className="text-xs text-[var(--accent-red)] mt-1">{errors.shopType}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Shop Description
                     </label>
                     <div className="relative">
-                      <FileText className="absolute left-3 top-3 w-4 h-4 text-[#64748B]" />
+                      <FileText className="absolute left-3 top-3 w-4 h-4 text-[var(--text-muted)]" />
                       <textarea
                         rows="2"
                         value={registerData.shopDescription.description}
@@ -472,46 +486,46 @@ const Auth = () => {
                           ...registerData, 
                           shopDescription: {...registerData.shopDescription, description: e.target.value}
                         })}
-                        className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition resize-none"
+                        className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition resize-none"
                         placeholder="Describe your pharmacy..."
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Passcode
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="password"
                         required
                         value={registerData.passCode}
                         onChange={(e) => setRegisterData({ ...registerData, passCode: e.target.value })}
                         className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-1 transition ${
-                          errors.passCode ? 'border-[#EF4444] focus:border-[#EF4444]' : 'border-[#E2E8F0] focus:border-[#0F6E8A]'
+                          errors.passCode ? 'border-[var(--accent-red)] focus:border-[var(--accent-red)]' : 'border-[var(--border)] focus:border-[var(--primary)]'
                         }`}
                         placeholder="Enter a secure passcode"
                       />
                     </div>
                     {errors.passCode && (
-                      <p className="text-xs text-[#EF4444] mt-1">{errors.passCode}</p>
+                      <p className="text-xs text-[var(--accent-red)] mt-1">{errors.passCode}</p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       Shop Address
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="text"
                         required
                         value={registerData.address}
                         onChange={(e) => setRegisterData({...registerData, address: e.target.value})}
-                        className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                         placeholder="123 Main Street, Lagos"
                       />
                     </div>
@@ -519,13 +533,13 @@ const Auth = () => {
                   
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Gender
                       </label>
                       <select
                         value={registerData.gender}
                         onChange={(e) => setRegisterData({...registerData, gender: e.target.value})}
-                        className="w-full px-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                       >
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -533,13 +547,13 @@ const Auth = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Country
                       </label>
                       <select
                         value={registerData.country}
                         onChange={(e) => setRegisterData({...registerData, country: e.target.value})}
-                        className="w-full px-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                       >
                         <option value="nigeria">Nigeria</option>
                         <option value="ghana">Ghana</option>
@@ -550,17 +564,17 @@ const Auth = () => {
                   </div>
 
                       <div>
-                    <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                    <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                       state
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="text"
                         required
                         value={registerData.state}
                         onChange={(e) => setRegisterData({...registerData, state: e.target.value})}
-                        className="w-full pl-10 pr-3 py-2 border border-[#E2E8F0] rounded-lg focus:outline-none focus:border-[#0F6E8A] focus:ring-1 focus:ring-[#0F6E8A] transition"
+                        className="w-full pl-10 pr-3 py-2 border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition"
                         placeholder="Borno"
                       />
                     </div>
@@ -568,18 +582,18 @@ const Auth = () => {
                   
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Password
                       </label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
                           value={registerData.password}
                           onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
                           className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-1 transition ${
-                            errors.password ? 'border-[#EF4444] focus:border-[#EF4444]' : 'border-[#E2E8F0] focus:border-[#0F6E8A]'
+                            errors.password ? 'border-[var(--accent-red)] focus:border-[var(--accent-red)]' : 'border-[var(--border)] focus:border-[var(--primary)]'
                           }`}
                           placeholder="••••••••"
                         />
@@ -589,30 +603,30 @@ const Auth = () => {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                         >
                           {showPassword ? (
-                            <EyeOff className="w-4 h-4 text-[#64748B]" />
+                            <EyeOff className="w-4 h-4 text-[var(--text-muted)]" />
                           ) : (
-                            <Eye className="w-4 h-4 text-[#64748B] blink-eye" />
+                            <Eye className="w-4 h-4 text-[var(--text-muted)] blink-eye" />
                           )}
                         </button>
                       </div>
                       {errors.password && (
-                        <p className="text-xs text-[#EF4444] mt-1">{errors.password}</p>
+                        <p className="text-xs text-[var(--accent-red)] mt-1">{errors.password}</p>
                       )}
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-[#1E293B] mb-2">
+                      <label className="block text-sm font-medium text-[var(--text-dark)] mb-2">
                         Confirm Password
                       </label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                         <input
                           type={showPassword ? 'text' : 'password'}
                           required
                           value={registerData.confirmPassword}
                           onChange={(e) => setRegisterData({...registerData, confirmPassword: e.target.value})}
                           className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-1 transition ${
-                            errors.confirmPassword ? 'border-[#EF4444] focus:border-[#EF4444]' : 'border-[#E2E8F0] focus:border-[#0F6E8A]'
+                            errors.confirmPassword ? 'border-[var(--accent-red)] focus:border-[var(--accent-red)]' : 'border-[var(--border)] focus:border-[var(--primary)]'
                           }`}
                           placeholder="••••••••"
                         />
@@ -622,14 +636,14 @@ const Auth = () => {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                         >
                           {showPassword ? (
-                            <EyeOff className="w-4 h-4 text-[#64748B]" />
+                            <EyeOff className="w-4 h-4 text-[var(--text-muted)]" />
                           ) : (
-                            <Eye className="w-4 h-4 text-[#64748B] blink-eye" />
+                            <Eye className="w-4 h-4 text-[var(--text-muted)] blink-eye" />
                           )}
                         </button>
                       </div>
                       {errors.confirmPassword && (
-                        <p className="text-xs text-[#EF4444] mt-1">{errors.confirmPassword}</p>
+                        <p className="text-xs text-[var(--accent-red)] mt-1">{errors.confirmPassword}</p>
                       )}
                     </div>
                   </div>
@@ -639,14 +653,14 @@ const Auth = () => {
                       type="checkbox"
                       checked={acceptTerms}
                       onChange={(e) => setAcceptTerms(e.target.checked)}
-                      className="mt-0.5 rounded border-[#E2E8F0] text-[#0F6E8A] focus:ring-[#0F6E8A]"
+                      className="mt-0.5 rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)]"
                     />
-                    <span className="text-sm text-[#64748B]">
-                      I accept the <Link to="/terms" className="text-[#0F6E8A] hover:underline">Terms & Conditions</Link>
+                    <span className="text-sm text-[var(--text-muted)]">
+                      I accept the <Link to="/terms" className="text-[var(--primary)] hover:underline">Terms & Conditions</Link>
                     </span>
                   </label>
                   {errors.terms && (
-                    <p className="text-xs text-[#EF4444] -mt-2">{errors.terms}</p>
+                    <p className="text-xs text-[var(--accent-red)] -mt-2">{errors.terms}</p>
                   )}
                   
                   <button

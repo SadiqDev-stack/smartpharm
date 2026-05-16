@@ -3,12 +3,12 @@ import Navigation from "../components/Navigation";
 
 const Products = () => {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="rounded-3xl bg-slate-900 p-6 shadow-xl border border-slate-800">
-          <h1 className="text-2xl font-semibold">Products</h1>
-          <p className="text-slate-400 mt-2">Manage medicines, stock levels, and expiry tracking from one place.</p>
+        <div className="rounded-3xl bg-white p-6 shadow-lg border border-[#E2E8F0] hover:shadow-xl transition">
+          <h1 className="text-2xl font-semibold text-[#1E293B]">Products</h1>
+          <p className="text-[#64748B] mt-2">Manage medicines, stock levels, and expiry tracking from one place.</p>
         </div>
       </main>
     </div>
