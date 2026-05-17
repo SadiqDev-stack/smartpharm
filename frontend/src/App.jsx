@@ -6,6 +6,10 @@ import Products from "./pages/Products";
 import Patients from "./pages/Patients";
 import Loans from "./pages/Loans";
 import Invoices from "./pages/Invoices";
+import Expiry from "./pages/Expiry";
+import Notifications from "./pages/Notifications";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import Message from "./pages/Message";
 import Assistant from "./pages/Assistant";
 import Unlock from "./pages/Unlock";
@@ -44,7 +48,7 @@ const App = () => {
               }
             />
             <Route
-              path="/products"
+              path="/user/products"
               element={
                 <ProtectedRoute>
                   <Products />
@@ -52,7 +56,7 @@ const App = () => {
               }
             />
             <Route
-              path="/patients"
+              path="/user/patients"
               element={
                 <ProtectedRoute>
                   <Patients />
@@ -60,7 +64,7 @@ const App = () => {
               }
             />
             <Route
-              path="/loans"
+              path="/user/loans"
               element={
                 <ProtectedRoute>
                   <Loans />
@@ -68,10 +72,42 @@ const App = () => {
               }
             />
             <Route
-              path="/invoices"
+              path="/user/invoices"
               element={
                 <ProtectedRoute>
                   <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user/expiry"
+              element={
+                <ProtectedRoute>
+                  <Expiry />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user/analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/shared/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

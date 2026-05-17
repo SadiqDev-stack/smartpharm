@@ -1,23 +1,31 @@
-import React from "react";
+
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import useStorage from "../hooks/useStorage";
 import Unlock from "../pages/Unlock";
+import Loader from "./Loader";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading  } = useAuth();
+  const { isAuthenticated, loading} = useAuth();
   const { unlocked } = useStorage();
+  console.log(unlocked)
 
+  // Show modern blur loader while checking auth
   if (loading) {
-    return <div className="min-h-screen bg-white text-[var(--primary)] flex items-center justify-center">Loading...</div>;
+    return <Loader fullScreen={true} text="loading please wait..." />;
   }
 
+  // Not authenticated - redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/auth?mode=login" replace />;
-  }else if(!unlocked){
-      return <Unlock />
   }
 
+  // Authenticated but app is locked (passcode required)
+  if (!unlocked) {
+    return <Unlock />;
+  }
+
+  // Authenticated and unlocked - render children
   return children;
 };
 

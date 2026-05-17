@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
     
         const response = await api.get("/user/profile");
         const { data } = response;
+    
 
         if (!data.success) {
           setUser(null);

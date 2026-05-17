@@ -12,27 +12,29 @@ import {
   CreditCard,
   Users,
   FileText,
+  Bell,
+  Activity,
+  Home,
+  Sparkles,
+  MessageCircle,
+  DollarSign,
+  BarChart3,
+  Terminal,
 } from "lucide-react";
-import useStorage from "../hooks/useStorage";
 import { AuthContext } from "../context/AuthContext";
 
-const Navigation = ({ onLogout }) => {
+const Navigation = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const {logout} = useContext(AuthContext)
-
-
-
-  const { user } = useStorage();
+  const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -40,9 +42,10 @@ const Navigation = ({ onLogout }) => {
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
+    setDropdownOpen(false);
   }, [location]);
 
-  // Smooth scroll to section
+  // Smooth scroll to section (only for public pages)
   const handleSmoothScroll = (e, sectionId) => {
     e.preventDefault();
     if (location.pathname !== "/") {
@@ -62,16 +65,79 @@ const Navigation = ({ onLogout }) => {
     setMobileMenuOpen(false);
   };
 
-  // Navigation links based on user role
+  // Get navigation links based on user authentication status and role
   const getNavLinks = () => {
-    const publicNaviagtion = [
-      { label: "Home", href: "#home", isScroll: true },
-      { label: "Features", href: "#features", isScroll: true },
-      { label: "Benefits", href: "#benefits", isScroll: true },
-      { label: "Pricing", href: "#pricing", isScroll: true },
-    ];
+    // Public navigation (not logged in)
+    if (!user) {
+      return [
+        { label: "Home", href: "#home", isScroll: true, icon: Home },
+        {
+          label: "Features",
+          href: "#features",
+          isScroll: true,
+          icon: Sparkles,
+        },
+        {
+          label: "Benefits",
+          href: "#benefits",
+          isScroll: true,
+          icon: Activity,
+        },
+        {
+          label: "Pricing",
+          href: "#pricing",
+          isScroll: true,
+          icon: DollarSign,
+        },
+        {
+          label: "Support",
+          href: "/contact",
+          isScroll: false,
+          icon: MessageCircle,
+        },
+        {
+          label: "AI Assistant",
+          href: "/assistant",
+          isScroll: false,
+          icon: Sparkles,
+        },
+      ];
+    }
 
-    const userNavigation = [
+    // Admin navigation (role = "admin" or "super")
+    if (user.role === "admin" || user.role === "super") {
+      return [
+        {
+          label: "Dashboard",
+          href: "/admin/dashboard",
+          icon: LayoutDashboard,
+          isScroll: false,
+        },
+        { label: "Users", href: "/admin/users", icon: Users, isScroll: false },
+        {
+          label: "Config",
+          href: "/admin/config",
+          icon: Settings,
+          isScroll: false,
+        },
+        { label: "Logs", href: "/admin/logs", icon: Terminal, isScroll: false },
+        {
+          label: "Notifications",
+          href: "/admin/notifications",
+          icon: Bell,
+          isScroll: false,
+        },
+        {
+          label: "AI Assistant",
+          href: "/assistant",
+          icon: Sparkles,
+          isScroll: false,
+        },
+      ];
+    }
+
+    // Regular user navigation
+    return [
       {
         label: "Dashboard",
         href: "/user/dashboard",
@@ -80,66 +146,63 @@ const Navigation = ({ onLogout }) => {
       },
       {
         label: "Products",
-        href: "/user/dashboard/products",
+        href: "/user/products",
         icon: Package,
         isScroll: false,
       },
       {
         label: "Patients",
-        href: "/user/dashboard/patients",
+        href: "/user/patients",
         icon: Users,
         isScroll: false,
       },
       {
         label: "Loans",
-        href: "/user/dashboard/loans",
+        href: "/user/loans",
         icon: CreditCard,
         isScroll: false,
       },
       {
         label: "Invoices",
-        href: "/user/dashboard/invoices",
+        href: "/user/invoices",
         icon: FileText,
         isScroll: false,
       },
-    ];
-
-    const adminNavigation = [
+      { label: "Expiry", href: "/user/expiry", icon: Bell, isScroll: false },
       {
-        label: "Dashboard",
-        href: "/admin/dashboard",
-        icon: LayoutDashboard,
+        label: "Notifications",
+        href: "/user/notifications",
+        icon: Bell,
+        isScroll: false,
+      },
+      {
+        label: "Analytics",
+        href: "/user/analytics",
+        icon: BarChart3,
+        isScroll: false,
+      },
+      {
+        label: "Settings",
+        href: "/shared/settings",
+        icon: Settings,
+        isScroll: false,
+      },
+      {
+        label: "AI Assistant",
+        href: "/assistant",
+        icon: Sparkles,
         isScroll: false,
       },
     ];
-
-    const dynamicNav = [];
-
-    let nav = [];
-
-    if (user) {
-      if (location.pathname.includes(`/${user.role}`)) {
-        nav = user.role == "user" ? userNavigation : adminNavigation;
-        nav.push({ label: "Home", href: "#home", isScroll: true });
-      } else {
-        dynamicNav.push({
-          label: "Dashboard",
-          href: `${user.role}/dashboard`,
-          icon: LayoutDashboard,
-          isScroll: false,
-        });
-      }
-    } else {
-      nav = publicNaviagtion;
-    }
-
-    nav = [...nav, ...dynamicNav ];
-
-    return nav;
   };
 
   const navLinks = getNavLinks();
-  console.log(navLinks)
+
+  // Check if a link is active
+  const isActive = (href) => {
+    if (href.startsWith("#")) return false;
+    return location.pathname === href || location.pathname.startsWith(href);
+  };
 
   return (
     <>
@@ -155,34 +218,35 @@ const Navigation = ({ onLogout }) => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 shrink-0">
               <Package className="w-6 h-6 md:w-7 md:h-7 text-[#0F6E8A]" />
-              <span className="text-xl md:text-2xl font-bold text-[#1E293B]">
+              <span className="text-xl md:text-2xl font-bold text-[#1E293B] m-2">
                 Smart<span className="text-[#0F6E8A]">Pharm</span>
               </span>
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6 lg:gap-8">
-              {navLinks.map((link, index) =>
+              {navLinks.map((link) =>
                 link.isScroll ? (
                   <a
                     key={link.label}
                     href={link.href}
-                    key={index}
                     onClick={(e) =>
                       handleSmoothScroll(e, link.href.substring(1))
                     }
-                    className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors"
+                    className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors flex items-center gap-1.5"
                   >
+                    {link.icon && <link.icon size={16} />}
                     {link.label}
                   </a>
                 ) : (
                   <Link
                     key={link.label}
                     to={link.href}
-                    className={`text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors ${
-                      location.pathname === link.href ? "text-[#0F6E8A]" : ""
+                    className={`text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors flex items-center gap-1.5 ${
+                      isActive(link.href) ? "text-[#0F6E8A]" : ""
                     }`}
                   >
+                    {link.icon && <link.icon size={16} />}
                     {link.label}
                   </Link>
                 ),
@@ -197,7 +261,7 @@ const Navigation = ({ onLogout }) => {
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#F8FAFC] transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold text-sm">
                       {user.name?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <span className="text-sm font-medium text-[#1E293B]">
@@ -210,23 +274,32 @@ const Navigation = ({ onLogout }) => {
                       <div
                         className="fixed inset-0 z-10"
                         onClick={() => setDropdownOpen(false)}
-                      ></div>
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#E2E8F0] py-2 z-20">
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-[#E2E8F0] py-2 z-20">
+                        <div className="px-4 py-2 border-b border-[#E2E8F0] mb-1">
+                          <p className="text-sm font-semibold text-[#1E293B]">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-[#64748B]">{user.email}</p>
+                          <p className="text-xs text-[#0F6E8A] capitalize mt-1">
+                            {user.role}
+                          </p>
+                        </div>
                         <Link
-                          to={`/${user.role}/dashboard/profile`}
+                          to={`/${user.role}/profile`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F6E8A]"
                         >
                           <User size={16} />
                           Profile
                         </Link>
                         <Link
-                          to={`/${user.role}/dashboard/settings`}
+                          to={`/${user.role}/settings`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F6E8A]"
                         >
                           <Settings size={16} />
                           Settings
                         </Link>
-                        <div className="border-t border-[#E2E8F0] my-1"></div>
+                        <div className="border-t border-[#E2E8F0] my-1" />
                         <button
                           onClick={logout}
                           className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#EF4444] hover:bg-[#FEF2F2]"
@@ -260,6 +333,7 @@ const Navigation = ({ onLogout }) => {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg hover:bg-[#F8FAFC] transition-colors"
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
                 <X className="w-6 h-6 text-[#1E293B]" />
@@ -272,18 +346,17 @@ const Navigation = ({ onLogout }) => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-[#E2E8F0] shadow-lg animate-fade-in">
-            <div className="px-4 py-3 space-y-2">
-              {navLinks.map((link, index) =>
+          <div className="md:hidden bg-white border-b border-[#E2E8F0] shadow-lg max-h-[calc(100vh-64px)] overflow-y-auto">
+            <div className="px-4 py-3 space-y-1">
+              {navLinks.map((link) =>
                 link.isScroll ? (
                   <a
                     key={link.label}
                     href={link.href}
-                    key={index}
                     onClick={(e) =>
                       handleSmoothScroll(e, link.href.substring(1))
                     }
-                    className="flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition"
+                    className="flex items-center gap-3 px-3 py-2.5 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition"
                   >
                     {link.icon && <link.icon size={18} />}
                     {link.label}
@@ -292,10 +365,8 @@ const Navigation = ({ onLogout }) => {
                   <Link
                     key={link.label}
                     to={link.href}
-                    className={`flex items-center gap-2 px-3 py-2 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition ${
-                      location.pathname === link.href
-                        ? "text-[#0F6E8A] bg-[#F8FAFC]"
-                        : ""
+                    className={`flex items-center gap-3 px-3 py-2.5 text-[#64748B] font-medium rounded-lg hover:bg-[#F8FAFC] hover:text-[#0F6E8A] transition ${
+                      isActive(link.href) ? "text-[#0F6E8A] bg-[#F8FAFC]" : ""
                     }`}
                   >
                     {link.icon && <link.icon size={18} />}
@@ -305,16 +376,16 @@ const Navigation = ({ onLogout }) => {
               )}
 
               {!user && (
-                <div className="pt-2 space-y-2 border-t border-[#E2E8F0]">
+                <div className="pt-4 space-y-2 border-t border-[#E2E8F0] mt-2">
                   <Link
                     to="/auth?mode=login"
-                    className="block px-3 py-2 text-center text-[#0F6E8A] font-semibold"
+                    className="block px-3 py-2.5 text-center text-[#0F6E8A] font-semibold rounded-lg border border-[#0F6E8A]"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/auth?mode=signup"
-                    className="block px-3 py-2 text-center bg-[#0F6E8A] text-white rounded-lg font-semibold"
+                    className="block px-3 py-2.5 text-center bg-[#0F6E8A] text-white rounded-lg font-semibold"
                   >
                     Get Started
                   </Link>
@@ -322,35 +393,38 @@ const Navigation = ({ onLogout }) => {
               )}
 
               {user && (
-                <div className="pt-2 space-y-2 border-t border-[#E2E8F0]">
-                  <div className="px-3 py-2 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold">
+                <div className="pt-4 space-y-2 border-t border-[#E2E8F0] mt-2">
+                  <div className="px-3 py-3 flex items-center gap-3 bg-[#F8FAFC] rounded-lg">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#0F6E8A] to-[#48B5C5] rounded-full flex items-center justify-center text-white font-semibold">
                       {user.name?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="text-sm font-semibold text-[#1E293B]">
                         {user.name}
                       </div>
                       <div className="text-xs text-[#64748B]">{user.email}</div>
+                      <div className="text-xs text-[#0F6E8A] capitalize mt-0.5">
+                        {user.role}
+                      </div>
                     </div>
                   </div>
                   <Link
-                    to={`/${user.role}/dashboard/profile`}
-                    className="flex items-center gap-2 px-3 py-2 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]"
+                    to={`/${user.role}/profile`}
+                    className="flex items-center gap-3 px-3 py-2.5 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]"
                   >
                     <User size={18} />
                     Profile
                   </Link>
                   <Link
-                    to={`/${user.role}/dashboard/settings`}
-                    className="flex items-center gap-2 px-3 py-2 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]"
+                    to={`/${user.role}/settings`}
+                    className="flex items-center gap-3 px-3 py-2.5 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]"
                   >
                     <Settings size={18} />
                     Settings
                   </Link>
                   <button
                     onClick={logout}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[#EF4444] rounded-lg hover:bg-[#FEF2F2]"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-[#EF4444] rounded-lg hover:bg-[#FEF2F2]"
                   >
                     <LogOut size={18} />
                     Logout
@@ -363,7 +437,7 @@ const Navigation = ({ onLogout }) => {
       </nav>
 
       {/* Spacer to prevent content from hiding under fixed nav */}
-      <div className="h-16 md:h-[70px]"></div>
+      <div className="h-16 md:h-[70px]" />
     </>
   );
 };

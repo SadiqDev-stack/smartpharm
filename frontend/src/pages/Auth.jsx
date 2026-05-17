@@ -500,6 +500,7 @@ const Auth = () => {
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="password"
+                        maxLength={4}
                         required
                         value={registerData.passCode}
                         onChange={(e) => setRegisterData({ ...registerData, passCode: e.target.value })}
