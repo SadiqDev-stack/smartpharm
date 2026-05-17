@@ -102,8 +102,8 @@ export const userController = {
       });
       req.token = token;
 
+      // fix token here user need to verify or login to get authenticated aGAIN
       sendMail({ email }, req, (sent) => {
-        setCookie(res, "token", token, LOGIN_EXPIRE);
         res.status(201).json({
           success: true,
           message: `Registration Successful, ${sent ? "Wait A Bit!" : "Please Login!"}`,
@@ -124,7 +124,7 @@ export const userController = {
   // Verify email or reset password
   async verify(req, res) {
     try {
-      const { token = false, type = "email" } = req.query;
+      const { token = false, type = "email" , expiry} = req.query;
 
       if (!token) {
         return res
@@ -150,6 +150,7 @@ export const userController = {
             { new: true },
           );
 
+         setCookie(res, "token", token);
           const destination = encodeURI(
             `${req.domain}/message?title=email verification successful&description=congratulations ${user.name}, you successfully verified your email address, now your account is ready, please wait a bit while we redirect you to your dashboard&redirect=${user.role == "user" ? "/user" : "/admin"}/dashboard`,
           );
