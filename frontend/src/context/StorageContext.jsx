@@ -10,6 +10,7 @@ let storageData = {
     invoices: [],
     patients: [],
     notifications: [],
+    sync: []
   },
 };
 
