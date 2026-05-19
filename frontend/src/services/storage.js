@@ -1,28 +1,48 @@
+// frontend/src/services/storage.js
 const Storage = {
-  getItem: (key, json = true) => {
-    let data = json
-      ? JSON.parse(localStorage.getItem(key))
-      : localStorage.getItem(key);
-
-    return data || false;
-  },
-
+  // Set item to localStorage
   setItem: (key, value) => {
-    if(!value) return
-    if (typeof value == Object) value = JSON.stringify(value);
-
-    localStorage.setItem(key, value);
-    return value;
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      console.error('Storage set error:', error);
+      return false;
+    }
   },
 
+  // Get item from localStorage
+  getItem: (key) => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.error('Storage get error:', error);
+      return null;
+    }
+  },
+
+  // Remove item from localStorage
   removeItem: (key) => {
-    localStorage.removeItem(key);
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      console.error('Storage remove error:', error);
+      return false;
+    }
   },
 
-  clearStorage: () => {
-    localStorage.clear();
-  },
+  // Clear all storage
+  clear: () => {
+    try {
+      localStorage.clear();
+      return true;
+    } catch (error) {
+      console.error('Storage clear error:', error);
+      return false;
+    }
+  }
 };
-
 
 export default Storage;

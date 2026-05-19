@@ -36,6 +36,7 @@ const ProductSchema = new Schema(
     stock: { type: Number, default: 0 },
     expiryDate: Date,
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "smartpharm_product" }],
+    otherNames: [String],
     priceHistory: [
       {
         date: Date,

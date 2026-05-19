@@ -48,7 +48,7 @@ const App = () => {
               }
             />
             <Route
-              path="/user/products"
+              path="/user/products/*"
               element={
                 <ProtectedRoute>
                   <Products />

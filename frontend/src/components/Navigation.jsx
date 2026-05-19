@@ -1,5 +1,5 @@
 // frontend/src/components/Navigation.jsx
-import { useState, useEffect, useContext , useRef} from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Package,
@@ -78,7 +78,7 @@ const ProfileDropdown = ({ user, logout, isOpen, onClose, onToggle }) => {
               Profile
             </Link>
             <Link
-              to={`/${user.role}/settings`}
+              to={`/shared/settings`}
               className="flex items-center gap-2 px-4 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F6E8A]"
               onClick={onClose}
             >
@@ -104,7 +104,15 @@ const ProfileDropdown = ({ user, logout, isOpen, onClose, onToggle }) => {
 };
 
 // Abstracted Mobile Menu Component
-const MobileMenu = ({ isOpen, navLinks, user, onSmoothScroll, onLinkClick, logout, isActive }) => {
+const MobileMenu = ({
+  isOpen,
+  navLinks,
+  user,
+  onSmoothScroll,
+  onLinkClick,
+  logout,
+  isActive,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -133,7 +141,7 @@ const MobileMenu = ({ isOpen, navLinks, user, onSmoothScroll, onLinkClick, logou
               {link.icon && <link.icon size={18} />}
               {link.label}
             </Link>
-          )
+          ),
         )}
 
         {!user && (
@@ -163,7 +171,9 @@ const MobileMenu = ({ isOpen, navLinks, user, onSmoothScroll, onLinkClick, logou
                 <div className="text-sm font-semibold text-[#1E293B] truncate">
                   {user.name}
                 </div>
-                <div className="text-xs text-[#64748B] truncate">{user.email}</div>
+                <div className="text-xs text-[#64748B] truncate">
+                  {user.email}
+                </div>
                 <div className="text-xs text-[#0F6E8A] capitalize mt-0.5">
                   {user.role}
                 </div>
@@ -178,7 +188,7 @@ const MobileMenu = ({ isOpen, navLinks, user, onSmoothScroll, onLinkClick, logou
               Profile
             </Link>
             <Link
-              to={`/${user.role}/settings`}
+              to={`/shared/settings`}
               className="flex items-center gap-3 px-3 py-2.5 text-[#64748B] rounded-lg hover:bg-[#F8FAFC]"
               onClick={onLinkClick}
             >
@@ -254,35 +264,115 @@ const Navigation = () => {
     if (!user) {
       return [
         { label: "Home", href: "#home", isScroll: true, icon: Home },
-        { label: "Features", href: "#features", isScroll: true, icon: Sparkles },
-        { label: "Benefits", href: "#benefits", isScroll: true, icon: Activity },
-        { label: "Pricing", href: "#pricing", isScroll: true, icon: DollarSign },
-        { label: "Support", href: "/contact", isScroll: false, icon: MessageCircle },
-        { label: "AI Assistant", href: "/assistant", isScroll: false, icon: Sparkles },
+        {
+          label: "Features",
+          href: "#features",
+          isScroll: true,
+          icon: Sparkles,
+        },
+        {
+          label: "Benefits",
+          href: "#benefits",
+          isScroll: true,
+          icon: Activity,
+        },
+        {
+          label: "Pricing",
+          href: "#pricing",
+          isScroll: true,
+          icon: DollarSign,
+        },
+        {
+          label: "Support",
+          href: "/contact",
+          isScroll: false,
+          icon: MessageCircle,
+        },
+        {
+          label: "AI Assistant",
+          href: "/assistant",
+          isScroll: false,
+          icon: Sparkles,
+        },
       ];
     }
 
     // Admin navigation (role = "admin" or "super")
     if (user.role === "admin" || user.role === "super") {
       return [
-        { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, isScroll: false },
+        {
+          label: "Dashboard",
+          href: "/admin/dashboard",
+          icon: LayoutDashboard,
+          isScroll: false,
+        },
         { label: "Users", href: "/admin/users", icon: Users, isScroll: false },
-        { label: "Config", href: "/admin/config", icon: Settings, isScroll: false },
+        {
+          label: "Config",
+          href: "/admin/config",
+          icon: Settings,
+          isScroll: false,
+        },
         { label: "Logs", href: "/admin/logs", icon: Terminal, isScroll: false },
-        { label: "Notifications", href: "/admin/notifications", icon: Bell, isScroll: false },
-        { label: "AI Assistant", href: "/assistant", icon: Sparkles, isScroll: false },
+        {
+          label: "Notifications",
+          href: "/admin/notifications",
+          icon: Bell,
+          isScroll: false,
+        },
+        {
+          label: "AI Assistant",
+          href: "/assistant",
+          icon: Sparkles,
+          isScroll: false,
+        },
       ];
     }
 
     // Regular user navigation - reduced for desktop to prevent overflow
     return [
-      { label: "Dashboard", href: "/user/dashboard", icon: LayoutDashboard, isScroll: false },
-      { label: "Products", href: "/user/products", icon: Package, isScroll: false },
-      { label: "Patients", href: "/user/patients", icon: Users, isScroll: false },
-      { label: "Loans", href: "/user/loans", icon: CreditCard, isScroll: false },
-      { label: "Invoices", href: "/user/invoices", icon: FileText, isScroll: false },
-      { label: "Analytics", href: "/user/analytics", icon: BarChart3, isScroll: false },
-      { label: "AI Assistant", href: "/assistant", icon: Sparkles, isScroll: false },
+      {
+        label: "Dashboard",
+        href: "/user/dashboard",
+        icon: LayoutDashboard,
+        isScroll: false,
+      },
+      {
+        label: "Products",
+        href: "/user/products",
+        icon: Package,
+        isScroll: false,
+      },
+      {
+        label: "Patients",
+        href: "/user/patients",
+        icon: Users,
+        isScroll: false,
+      },
+      {
+        label: "Loans",
+        href: "/user/loans",
+        icon: CreditCard,
+        isScroll: false,
+      },
+      {
+        label: "Invoices",
+        href: "/user/invoices",
+        icon: FileText,
+        isScroll: false,
+      },
+      {
+        label: "Analytics",
+        href: "/user/analytics",
+        icon: BarChart3,
+        isScroll: false,
+      },
+      {
+        label: "AI Assistant",
+        href: "/assistant",
+        icon: Sparkles,
+        isScroll: false,
+      },
     ];
   };
 
@@ -306,7 +396,7 @@ const Navigation = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-[70px]">
             {/* Logo */}
-            <Link to={user ? `/${user.role}/dashboard` : "/"} className="flex items-center gap-2 shrink-0">
+            <Link to={"/"} className="flex items-center gap-2 shrink-0">
               <Package className="w-6 h-6 md:w-7 md:h-7 text-[#0F6E8A]" />
               <span className="text-xl md:text-2xl font-bold text-[#1E293B]">
                 Smart<span className="text-[#0F6E8A]">Pharm</span>
@@ -320,7 +410,9 @@ const Navigation = () => {
                   <a
                     key={link.label}
                     href={link.href}
-                    onClick={(e) => handleSmoothScroll(e, link.href.substring(1))}
+                    onClick={(e) =>
+                      handleSmoothScroll(e, link.href.substring(1))
+                    }
                     className="text-[#64748B] font-medium hover:text-[#0F6E8A] transition-colors flex items-center gap-1.5 whitespace-nowrap"
                   >
                     {link.icon && <link.icon size={16} />}
@@ -339,7 +431,7 @@ const Navigation = () => {
                     <span className="hidden lg:inline">{link.label}</span>
                     <span className="lg:hidden">{link.label.slice(0, 8)}</span>
                   </Link>
-                )
+                ),
               )}
             </div>
 
