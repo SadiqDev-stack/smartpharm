@@ -1,1048 +1,170 @@
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                     SMART PHARM - PHARMACY INVENTORY SYSTEM                   ║
-║                           Complete Architecture Guide                         ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-
-📋 PROJECT OVERVIEW
-───────────────────────────────────────────────────────────────────────────────
-SmartPharm is a comprehensive inventory management system for pharmacy shops with:
-  • Offline-first capability with automatic sync when online
-  • AI integration for medicine scanning and recommendations
-  • Patient and loan management with payment tracking
-  • Expiry notifications and inventory alerts
-  • Multi-user support with role-based access control
-
-TECH STACK: MERN (MongoDB, Express.js, React.js, Node.js) + IndexedDB + LocalStorage
-
-
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                            PART 1: KEY FEATURES                              ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-
-1. 💊 INVENTORY MANAGEMENT
-   - Store medicines/products with detailed dosage information
-   - Track price history with updates and breakdowns
-   - Monitor stock levels and trigger low-stock alerts
-   - Support multiple units (sachet, box, bottle, capsule, etc.)
-
-2. 📄 INVOICE MANAGEMENT
-   - Create purchasing & selling invoices
-   - Add/remove items dynamically with price adjustments
-   - Mark invoices as completed with timestamps
-   - Track customer details and payment status
-
-3. 💰 LOAN TRACKING
-   - Record loans to patients with product lists and amounts
-   - Payment breakdown tracking with multiple payment channels
-   - Mark partial or full payments with automatic balance calculation
-   - Payment notifications for overdue loans
-
-4. 👥 PATIENT MANAGEMENT
-   - Store recurring patient profiles with medical history
-   - Track dosage schedules and mark completion status
-   - Record health metrics (BP, weight, sugar level, pregnancy status)
-   - Resolution tracking with snapshot data on patient recovery
-
-5. ⏰ EXPIRY MANAGEMENT
-   - Automatic notifications for products expiring within 1 year
-   - Color-coded expiry status (green/yellow/red)
-   - Re-notification system for unresolved expiry items
-   - Historical expiry tracking
-
-6. 🤖 AI INTEGRATION
-   - Medicine image scanning for product identification
-   - Dosage suggestions based on patient conditions
-   - Automated recommendations (best sellers, similar medicines)
-   - Description generation from product names and characteristics
-
-7. 📊 ANALYTICS & INSIGHTS
-   - Dashboard with recent activity (5 latest events)
-   - Statistics aggregation (total patients, loans, revenue)
-   - Smart suggestions (overdue loans, expiring products, volatile prices)
-   - Seasonal trend analysis from historical data
-
-8. 🔌 OFFLINE-FIRST ARCHITECTURE
-   - Complete offline functionality with IndexedDB
-   - Automatic sync queue when connection restored
-   - Local image storage with media manager
-   - Configuration caching in LocalStorage
-
-9. 📤 IMPORT/EXPORT
-   - Export shop data as JSON backup
-   - Import data with conflict resolution
-   - Bulk product/patient data import
-
-
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                      PART 2: DATA MODELS & SCHEMA                            ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-
-═══ GENERAL FIELDS (Applied to All Core Models) ═══════════════════════════════
-
-All data models include these base fields:
-  • _id: ObjectId (MongoDB unique identifier)
-  • userId: ObjectId (reference to User - multi-tenant support)
-  • createdAt: Date (auto-generated on creation)
-  • updatedAt: Date (auto-updated on modification)
-  • createdBy: ObjectId (reference to User who created)
-  • description: String (optional notes/details)
-  • syncInfo: {
-      dataUploaded: Boolean (synced to server),
-      mediaUploaded: Boolean (images synced)
-    }
-
-
-═══ PRODUCT / MEDICINE SCHEMA ══════════════════════════════════════════════════
-
-Stores all medicine and product information.
-
-{
-  name: String (required, unique per user),
-  
-  type: Enum(injection, syrup, drop, cream, inhaler, tablet, capsule, 
-              ointment, powder, solution, spray, item),
-  
-  dosage: {
-    pregnantAllowed: Boolean (can pregnant women use),
-    sensitive: Boolean (requires caution/prescription),
-    breakdown: [{
-      label: String (e.g., "Adult", "Child 6-12", "Infant"),
-      description: String (e.g., "2ml three times daily"),
-      ageRange: String (e.g., "12+", "6-12", "0-5")
-    }]
-  },
-  
-  pricing: [{
-    unit: Enum(sachet, capsule, box, bottle, ampule, ointment, ml, pack),
-    amount: Number,  // Price in Naira
-    quantity: Number (e.g., 10 sachets per box)
-  }],
-  
-  stock: Number (current inventory count),
-  
-  expiryDate: Date (optional),
-  
-  relatedProducts: [ObjectId] (references to similar/complementary medicines),
-  
-  priceHistory: [{
-    date: Date,
-    price: Number,
-    unit: String
-  }],
-  
-  invoiceCount: Number (default: 0, times sold),
-  
-  mediaSource: String (optional - URL or localMedia:id.png)
-}
-
-
-═══ PATIENT SCHEMA ═════════════════════════════════════════════════════════════
-
-Tracks recurring patients and their medical history.
-
-{
-  name: String (required),
-  phone: String (optional),
-  gender: Enum(male, female, other),
-  
-  age: Enum(infant, child, teenager, adult, senior),
-  
-  condition: String (optional - reason for visit, e.g., "malaria", "fever"),
-  
-  healthData: {
-    weight: Number (kg),
-    bloodPressure: String (e.g., "120/80"),
-    isPregnant: Boolean,
-    sugarLevel: Number (mg/dL),
-    isInfectious: Boolean,
-    diabetesLevel: String (optional)
-  },
-  
-  location: String (optional - address),
-  
-  returningCount: Number (default: 0, tracks visit frequency),
-  
-  dosageSchedule: [{
-    label: String (e.g., "PCM 500mg"),
-    prescribedDate: Date,
-    completed: Boolean,
-    completedDate: Date
-  }],
-  
-  resolutionHistory: [{
-    date: Date,
-    status: String (e.g., "Recovered", "Improved", "On Treatment"),
-    snapshot: Object (health metrics captured at this point)
-  }],
-  
-  totalLoans: Number (reference count),
-  
-  totalLoanAmount: Number (sum of all loan amounts),
-  
-  isResolved: Boolean (default: false, marks treatment completion),
-  
-  notes: String (treatment notes and observations)
-}
-
-
-═══ LOAN SCHEMA ════════════════════════════════════════════════════════════════
-
-Manages credit given to patients with payment tracking.
-
-{
-  borrowerName: String (required),
-  borrowerPhone: String (required),
-  borrowerGender: Enum(male, female),
-  borrowerLocation: String (optional),
-  
-  loanItems: [{
-    productId: ObjectId (ref: Product, optional),
-    productName: String,
-    quantity: Number,
-    unitPrice: Number,
-    totalPrice: Number,
-    description: String,
-    date: Date (default: Date.now())
-  }],
-  
-  amountSummary: {
-    totalLoanAmount: Number (sum of all items),
-    totalPaid: Number (amount received so far),
-    balanceRemaining: Number (auto-calculated: total - paid)
-  },
-  
-  paymentHistory: [{
-    date: Date,
-    amountPaid: Number,
-    paymentMethod: Enum(cash, bank_transfer, mobile_money, cheque),
-    paidBy: String (person who made payment),
-    itemsCovered: [String] (item IDs or descriptions),
-    notes: String
-  }],
-  
-  loanStatus: Enum(active, partial_paid, fully_paid, overdue),
-  
-  isOverdue: Boolean (auto-set if balance > 0 and > 30 days old),
-  
-  notes: String (special notes or agreements)
-}
-
-
-═══ INVOICE SCHEMA ═════════════════════════════════════════════════════════════
-
-Records all buying/selling transactions.
-
-{
-  invoiceNumber: String (unique, auto-generated: INV-YYYY-MM-DD-XXXX),
-  
-  type: Enum(purchasing, selling),
-  
-  items: [{
-    productId: ObjectId (ref: Product, optional),
-    productName: String (required),
-    quantity: Number (required),
-    unitPrice: Number (required),
-    totalPrice: Number (quantity * unitPrice)
-  }],
-  
-  totalAmount: Number (sum of all items),
-  
-  customerDetails: {
-    name: String (optional, for selling invoices),
-    contactPhone: String (optional),
-    paymentAmount: Number (amount customer paid),
-    remainingBalance: Number (auto-calculated),
-    paymentDate: Date
-  },
-  
-  isCompleted: Boolean (default: false),
-  completedDate: Date,
-  
-  invoiceDate: Date (default: Date.now()),
-  
-  notes: String (optional memo/terms)
-}
-
-
-═══ NOTIFICATION SCHEMA ════════════════════════════════════════════════════════
-
-System alerts and user notifications.
-
-{
-  title: String (notification title),
-  
-  description: String (full message),
-  
-  type: Enum(info, warning, error, success),
-  
-  category: Enum(expiry, payment_due, low_stock, patient_update, system),
-  
-  sourceId: ObjectId (reference to related entity - Product, Loan, Patient),
-  
-  isRead: Boolean (default: false),
-  
-  createdAt: Date (default: Date.now()),
-  
-  expiresAt: Date (optional - when notification becomes irrelevant)
-}
-
-
-═══ STATISTICS SCHEMA ══════════════════════════════════════════════════════════
-
-Aggregated metrics for dashboard (denormalized for performance).
-
-{
-  userId: ObjectId (ref: User),
-  
-  period: Enum(daily, weekly, monthly),
-  
-  products: {
-    total: Number,
-    expired: Number,
-    expiringWithin30Days: Number,
-    lowStock: Number,
-    invoicedThisPeriod: Number
-  },
-  
-  loans: {
-    total: Number,
-    active: Number,
-    fullyPaid: Number,
-    overdue: Number,
-    totalAmount: Number,
-    totalPaid: Number,
-    totalOutstanding: Number
-  },
-  
-  patients: {
-    total: Number,
-    resolved: Number,
-    active: Number,
-    byAge: {
-      infant: Number,
-      child: Number,
-      teenager: Number,
-      adult: Number,
-      senior: Number
-    },
-    byGender: { male: Number, female: Number, other: Number }
-  },
-  
-  invoices: {
-    total: Number,
-    completed: Number,
-    totalRevenue: Number,
-    itemsSold: Number,
-    averageInvoiceValue: Number
-  },
-  
-  lastUpdated: Date
-}
-
-
-═══ USER SCHEMA ════════════════════════════════════════════════════════════════
-
-Authentication and user profile management.
-
-{
-  name: String (required),
-  email: String (required, unique),
-  phone: String (required, unique),
-  
-  password: String (hashed, required),
-  
-  gender: Enum(male, female),
-  
-  state: String (location state),
-  
-  address: String (required),
-  
-  role: Enum(admin, pharmacist, user),
-  
-  accountStatus: Enum(active, inactive, suspended),
-  
-  accountMode: Enum(live, offline),
-  
-  shopProfile: {
-    shopName: String,
-    shopDescription: String,
-    shopType: Enum(small, medium, enterprise),
-    registrationNumber: String (optional)
-  },
-  
-  emailVerified: Boolean (default: false),
-  
-  lastLogin: Date,
-  
-  loginAttempts: Number (default: 0, reset after successful login),
-  
-  balanceInfo: {
-    accountBalance: Number (credit for premium features),
-    totalFunding: Number,
-    lastFundingDate: Date
-  },
-  
-  bankAccounts: [{
-    accountNumber: String,
-    accountName: String,
-    bankName: String
-  }],
-  
-  storedPhoneNumbers: [String] (frequently contacted numbers),
-  
-  dashboard: {
-    totalProducts: Number,
-    totalPatients: Number,
-    totalLoans: Number,
-    totalInvoices: Number,
-    unreadNotifications: Number
-  },
-  
-  preferences: {
-    defaultCurrency: String (default: "NGN"),
-    dateFormat: String,
-    theme: Enum(light, dark),
-    language: String
-  },
-  
-  createdAt: Date,
-  updatedAt: Date
-}
-
-
-╔═══════════════════════════════════════════════════════════════════════════════╗
-║                        PART 3: PAGE FLOWS & IMPLEMENTATION                   ║
-╚═══════════════════════════════════════════════════════════════════════════════╝
-
-🔐 AUTH PAGES (Login/Register)
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Entry point for the application with account authentication. Includes login/
-  registration with email verification and session management.
-
-FEATURES:
-  ✓ Registration with email, phone, shop info, address
-  ✓ Login with email/phone and password
-  ✓ Email verification before account activation
-  ✓ Session timeout (auto-logout after 30 days inactivity)
-  ✓ Passcode lock (4-digit PIN) on app restart
-  ✓ Password reset via email
-
-ROUTES: /auth/login, /auth/register, /auth/verify-email, /auth/forgot-password
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - React form with validation (email format, password strength)
-    - Protected routes redirect to /auth/login if not authenticated
-    - Store JWT token in secure httpOnly cookie + local state
-    - Intercept API calls to attach auth header
-    - Passcode modal on app load with sessionStorage tracking
-  
-  Backend:
-    - Hash passwords with bcrypt (salt rounds: 10)
-    - Generate JWT tokens with 30-day expiry
-    - Implement refresh token mechanism for token renewal
-    - Send verification email via Nodemailer with confirmation link
-    - Track login attempts and lock account after 5 failed attempts
-    - Verify JWT on every protected endpoint
-
-
-📊 DASHBOARD
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Central hub showing overview, analytics, and quick actions. Displays recent
-  activities, key metrics, smart suggestions, and system health.
-
-FEATURES:
-  ✓ Recent activity feed (5 latest: products added, loans issued, patients seen)
-  ✓ Expiry alerts and urgent notifications badge
-  ✓ Dashboard statistics (totals from Stats schema)
-  ✓ AI-generated smart suggestions with action buttons
-  ✓ Time-based greeting (Good morning/afternoon/evening)
-  ✓ Quick action buttons (Add Product, Create Invoice, etc.)
-  ✓ Widget for stats modal showing aggregated data
-
-ROUTES: /dashboard
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Use React Query/SWR for data fetching with 30s cache
-    - Real-time stats dashboard with auto-refresh
-    - Notification badge showing unread count
-    - Navigation sidebar with role-based menu items
-    - Charts library (Recharts) for trend visualization
-    - Skeleton loaders while data loading
-  
-  Backend:
-    - GET /api/dashboard/overview - Aggregate recent records
-    - GET /api/dashboard/stats - Calculate/cache Stats schema
-    - GET /api/dashboard/suggestions - Top 5 smart suggestions
-    - Cronjob to update stats daily at midnight
-    - Return suggestions sorted by priority:
-      * Loans: (isOverdue DESC, daysOverdue DESC, balanceRemaining DESC)
-      * Products: (daysUntilExpiry ASC, stock ASC)
-      * Alerts: Low stock items (stock < threshold)
-
-
-💊 PRODUCT PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Full inventory management interface for medicines and products with search,
-  filtering, CRUD operations, and price history tracking.
-
-ROUTES: /dashboard/products, /products/list, /products/view/:id, 
-        /products/add, /products/edit/:id, /products/delete/:id
-
-FEATURES - LIST VIEW:
-  ✓ Search by name, ID, description (AI-assisted if no exact match)
-  ✓ Primary filter: Type (injection, tablet, syrup, etc.)
-  ✓ Advanced filters:
-      - Expiry: Sort by nearest expiry date (color: red/yellow/green)
-      - Volatile: Sort by price changes (priceHistory.length > 3)
-      - Dosage: Filter by age group + pregnancy safety
-      - Stock: Show low stock items (stock < 5)
-  ✓ Stock indicator visual (low/normal/good)
-  ✓ Stats modal showing total products, expired count, etc.
-
-FEATURES - ADD:
-  Form collects:
-    ✓ name (required, unique validation)
-    ✓ type (dropdown)
-    ✓ dosage breakdown (add multiple with suggestions)
-    ✓ pricing (multiple units with quantity per unit)
-    ✓ stock count
-    ✓ expiryDate
-    ✓ image upload
-    ✓ related products search
-  
-  AI Assistance:
-    ✓ Auto-generate description from product name
-    ✓ Suggest dosage recommendations based on type
-    ✓ Auto-populate related products via fuzzy match
-
-FEATURES - EDIT:
-  ✓ Modify all product fields
-  ✓ Update pricing (appends to priceHistory)
-  ✓ Update or re-upload image
-  ✓ Refresh related products
-
-FEATURES - DELETE:
-  ✓ Requires data verification (confirm name/type)
-  ✓ Check if used in invoices/loans before deletion
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - useDb hook: useDb.products.getAll(), .add(), .update(), .delete()
-    - Search: client-side fuzzy match + server AI fallback
-    - Image: Display local blob if offline, queue upload when online
-    - React Hook Form for form state
-    - Debounced search (300ms) for performance
-    - useOfflineSync hook to handle sync queue
-  
-  Backend:
-    - GET /api/products/list - Pagination (20/page), filtering, sorting
-    - GET /api/products/search - Fuzzy search with optional AI
-    - POST /api/products - Add with validation + syncInfo init
-    - PATCH /api/products/:id - Update fields, auto-append priceHistory
-    - DELETE /api/products/:id - Delete with invoice count check
-    - POST /api/media/upload - Multipart upload to Cloudinary
-    - Middleware: Log all changes to audit trail
-
-
-📄 INVOICE PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Create and manage purchasing/selling invoices with item management, customer
-  tracking, and payment recording.
-
-ROUTES: /dashboard/invoices, /invoices/list, /invoices/view/:id,
-        /invoices/create, /invoices/edit/:id, /invoices/delete/:id
-
-FEATURES - LIST VIEW:
-  ✓ Search: name, ID, customer details
-  ✓ Filters: Type (purchasing/selling), Completed status
-  ✓ Sort: By total amount, completion date
-  ✓ Display: name, type, total items, customer name, status, date
-  ✓ Inline badge showing completion status
-
-FEATURES - CREATE (Multi-Step):
-  Step 1: Select Type
-    ✓ Choose purchasing or selling
-  
-  Step 2: Enter Details
-    ✓ Invoice name
-    ✓ Customer name (for selling only)
-    ✓ Contact phone (optional)
-  
-  Step 3: Add Items (Modal)
-    ✓ Search existing products or manually enter
-    ✓ Select quantity and unit price
-    ✓ Real-time total calculation
-    ✓ Add/edit/remove items
-  
-  Step 4: Review & Save
-    ✓ Show summary with totals
-    ✓ Save to local DB + sync queue
-
-FEATURES - EDIT:
-  ✓ Update name, customer details, items
-  ✓ Mark as completed (sets completedDate)
-  ✓ Recalculate totals on item changes
-
-FEATURES - DELETE:
-  ✓ Requires data verification (invoice number/total)
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - useDb.invoices for offline operations
-    - Modal for step-by-step form
-    - Real-time item total calculation with reduce()
-    - Product search with debounce
-    - useOfflineSync for sync queue management
-  
-  Backend:
-    - GET /api/invoices/list - With filters & pagination
-    - POST /api/invoices - Create with validation
-    - PATCH /api/invoices/:id - Update items, recalculate totals
-    - DELETE /api/invoices/:id - Delete with verification
-    - Auto-increment invoiceNumber with date prefix
-    - Update Product.invoiceCount on creation/deletion
-    - Middleware: Validate item productId exists (if provided)
-
-
-💰 LOAN PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Track credit given to patients with comprehensive payment management,
-  overdue alerts, and payment history.
-
-ROUTES: /dashboard/loans, /loans/list, /loans/view/:id,
-        /loans/create, /loans/edit/:id, /loans/delete/:id
-
-FEATURES - LIST VIEW:
-  ✓ Search: borrower name, phone, location
-  ✓ Filters: Gender, sort by amount/balance/status
-  ✓ Display card: name, total loan, paid, balance, status, last payment
-  ✓ Overdue badge (red) for active loans > 30 days old
-
-FEATURES - CREATE:
-  ✓ Enter borrower details (name, phone, gender, location)
-  ✓ Add loan items (same as invoice):
-      - Product selection or manual entry
-      - Quantity × Unit Price = Item Total
-  ✓ System auto-calculates totalLoanAmount
-  ✓ Auto-set loanStatus to "active"
-  ✓ Save to DB + sync queue
-
-FEATURES - VIEW:
-  ✓ Display loan summary:
-      - Borrower info (name, phone, location, gender)
-      - Amount summary (total, paid, balance, overdue status)
-      - Overdue indicator if > 30 days and balance > 0
-  
-  ✓ Two toggle tabs:
-      a) Loan Items: Shows products with dates
-      b) Payment History: Shows all payments + payment methods
-  
-  ✓ "Mark as Paid" button:
-      - Opens dialog to enter payment amount
-      - Auto-calculates remaining balance
-      - Select payment method (cash, bank, mobile money, cheque)
-      - Optional: specify who made payment
-      - Creates new payment record
-      - Updates loanStatus (fully_paid if balance = 0)
-      - Auto-generates description
-      - Updates UI immediately
-
-FEATURES - EDIT:
-  ✓ Search/update loan items
-  ✓ Modify prices or quantities
-  ✓ Update borrower details
-  ✓ Recalculate totals
-
-FEATURES - DELETE:
-  ✓ Requires verification (borrower name, phone)
-  ✓ Options: Delete single item, whole loan, or specific payment
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - useDb.loans for offline operations
-    - Real-time balance calculations in component state
-    - Modal for marking payments with confirmation
-    - Highlight overdue loans with red border/badge
-    - Tab component for Items/History toggle
-    - useOfflineSync for sync queue
-  
-  Backend:
-    - GET /api/loans/list - Search & filtering with pagination
-    - POST /api/loans - Create with validation
-    - POST /api/loans/:id/addPayment - Create payment + recalculate
-    - PATCH /api/loans/:id - Update item/borrower details
-    - DELETE /api/loans/:id - Delete with verification
-    - Cronjob: Daily mark loans as overdue (balance > 0 && age > 30 days)
-    - Cronjob: Daily create notifications for overdue loans
-    - Endpoint: GET /api/loans/overdue - Get all overdue loans
-
-
-👥 PATIENT PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Manage recurring patient profiles, medical history, dosage schedules, and
-  treatment outcomes tracking.
-
-ROUTES: /dashboard/patients, /patients/list, /patients/view/:id,
-        /patients/create, /patients/edit/:id, /patients/delete/:id
-
-FEATURES - LIST VIEW:
-  ✓ Search: patient name, condition, details
-  ✓ Filters: Toggle by gender, resolved status
-  ✓ Display: name, age, gender, condition, visit count, resolved badge
-  ✓ Sort: By name, visit count, or last visit date
-
-FEATURES - CREATE:
-  ✓ Enter patient info: name, phone, gender, age group
-  ✓ Optional: condition, location, health metrics
-  ✓ Save and optionally add dosage schedule
-
-FEATURES - VIEW:
-  ✓ Display patient profile with full health data
-  ✓ Statistics: Total visits, total loans, resolved status
-  ✓ Progress bar: dosages completed / total
-  
-  ✓ Two toggle tabs:
-      a) Dosage Schedule: List of prescribed medicines
-         - Label (e.g., "PCM 500mg 2x daily")
-         - Date prescribed
-         - Status checkbox (completed/pending)
-         - Visual: Strike-through if completed
-      
-      b) Resolution History: Treatment outcomes
-         - Date, status (Recovered/Improved/On Treatment)
-         - Health snapshot (weight, BP, etc. at that point)
-  
-  ✓ "Add Dosage" button:
-      - Opens modal to enter label and description
-      - Auto-set date to today
-      - Save immediately to DB
-  
-  ✓ When marking dosage complete:
-      - Check all dosages completed
-      - Offer to resolve patient
-      - Capture health metrics snapshot
-      - Add to resolution history
-      - Increment returningCount
-
-FEATURES - EDIT:
-  ✓ Update patient basic info
-  ✓ Modify/delete individual dosages
-  ✓ Edit health data
-
-FEATURES - DELETE:
-  ✓ Requires verification (confirm patient name)
-  ✓ Delete whole patient or specific dosages
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - useDb.patients for offline operations
-    - Modal for adding dosages
-    - Progress indicator: completed/total dosages
-    - Visual distinction for resolved patients (opacity)
-    - Tab component for schedule/history
-    - useOfflineSync for sync queue
-  
-  Backend:
-    - GET /api/patients/list - Search & filtering
-    - POST /api/patients - Create with validation
-    - PATCH /api/patients/:id - Update info/health data
-    - POST /api/patients/:id/addDosage - Create dosage
-    - PATCH /api/patients/:id/dosages/:dosageId/complete - Mark complete
-    - PATCH /api/patients/:id/resolve - Mark resolved + capture snapshot
-    - DELETE /api/patients/:id - Delete with verification
-    - Endpoint: GET /api/patients/unresolved - Get active patients
-
-
-⏰ EXPIRY PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Monitor medicine expiry dates with visual alerts and re-notification system.
-  Automatically flags products approaching or past expiry.
-
-ROUTES: /dashboard/expiry
-
-FEATURES:
-  ✓ List all products sorted by expiry proximity
-  ✓ Color coding:
-      - GREEN: Expiry > 1 year (365+ days)
-      - YELLOW: Expiry 30-365 days
-      - RED: Expiry < 30 days or expired
-  ✓ Search by product name
-  ✓ Quick update expiry date inline
-  ✓ Click to view product details
-  ✓ Status badge: "Expired", "Expiring Soon", "Good"
-  ✓ Optional: Bulk mark as sold/disposed
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Calculate days remaining = expiryDate - today
-    - Conditional styling based on days remaining
-    - Inline edit form for expiry date
-    - Real-time color updates on changes
-    - useDb for offline operations
-  
-  Backend:
-    - GET /api/products/expiry - Returns sorted products
-    - PATCH /api/products/:id/expiry - Update expiry date
-    - Cronjob (daily):
-      * Find products expiring within 1 year
-      * For new expirees: create Notification
-      * For re-notified (>30 days): create another Notification
-      * Mark notification.sourceId with Product ID
-    - On product.sold or delete: resolve expiry notifications
-
-
-🔔 NOTIFICATIONS CENTER
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Unified notification center for system alerts (expiry, payments due, low stock,
-  patient updates, etc.) with read/delete and filtering.
-
-ROUTES: /dashboard/notifications
-
-FEATURES:
-  ✓ List all notifications sorted by date (newest first)
-  ✓ Search by title or category
-  ✓ Filter by type: info, warning, error, success
-  ✓ Filter by category: expiry, payment_due, low_stock, patient_update, system
-  ✓ Mark single as read / Mark all as read
-  ✓ Delete old notifications (>90 days)
-  ✓ Click notification → navigate to related entity
-  ✓ Badge showing unread count
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Real-time badge count on notification icon
-    - Notification polling (every 30s) or WebSocket
-    - Click to navigate using sourceId + category
-    - useDb for marking as read offline
-  
-  Backend:
-    - GET /api/notifications/list - With filtering & pagination
-    - PATCH /api/notifications/:id/read - Mark read
-    - PATCH /api/notifications/markAllRead - Mark all read
-    - DELETE /api/notifications/:id - Delete single
-    - POST /api/notifications/deleteOld - Delete > 90 days
-    - Cronjob: Run deleteOld weekly
-    - WebSocket: Emit new notifications in real-time
-
-
-📈 ANALYTICS & STATS PAGE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Comprehensive business analytics showing trends, comparisons, and AI-generated
-  insights from historical data.
-
-FEATURES:
-  ✓ Display aggregated stats (from Stats schema)
-  ✓ Charts:
-      - Revenue over time (weekly/monthly selectable)
-      - Top 10 selling products
-      - Loan status breakdown (pie chart)
-      - Patient age/gender distribution
-      - Inventory turnover
-  ✓ Date range selector (last 30/90/365 days, custom)
-  ✓ Export data as CSV/PDF
-  ✓ AI Insights (callouts):
-      - "Best selling medicine this month"
-      - "Loans overdue >30 days: ₦X from Y people"
-      - "Products expiring soon: Z items"
-      - "Price volatility: W products changed price >3x"
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Recharts for visualizations
-    - Date range picker
-    - useDb to cache stats locally
-    - Export functionality (jsPDF, papaparse)
-  
-  Backend:
-    - GET /api/analytics/stats - Return Stats schema
-    - GET /api/analytics/trends - Historical trend data
-    - GET /api/analytics/topProducts - Top sellers
-    - Cronjob: Calculate and cache Stats daily
-    - Use MongoDB aggregation pipeline for performance
-
-
-🤖 AI INTEGRATION
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  AI assistant accessible globally with context-aware suggestions and answers.
-  User can select text on any page to ask AI contextual questions.
-
-FEATURES:
-  ✓ Selection AI:
-      - Highlight any text → AI icon appears near cursor
-      - Click → Open AI modal with selected text in context
-      - Ask questions about that product/loan/patient data
-  
-  ✓ Chat Bar:
-      - Available on dashboard footer
-      - Send queries, get instant suggestions
-      - Pass context manually (product, analytics, invoice)
-  
-  ✓ Suggestions:
-      - Medicine recommendations for conditions
-      - Dosage suggestions based on age/health
-      - Loan collection strategies
-      - Inventory optimization tips
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Global selection listener on mouse move
-    - aiSelectionContext to store selected text + entity data
-    - Chat component with message history
-    - AI only available when online (check navigator.onLine)
-  
-  Backend:
-    - POST /api/ai/suggest - Process context + query
-    - Integrate OpenAI API (GPT-3.5-turbo)
-    - System prompt: Pharmacy domain knowledge
-    - Validation: Filter sensitive data (phone, email)
-    - Rate limiting: 10 requests/day for free, unlimited for premium
-    - Response caching: Cache identical queries for 24h
-
-
-🔄 SYNC SYSTEM & OFFLINE MODE
-───────────────────────────────────────────────────────────────────────────────
-DESCRIPTION:
-  Core offline-first architecture with automatic sync queue and conflict
-  resolution.
-
-FEATURES:
-  ✓ Offline operations: Create/update all entities locally via IndexedDB
-  ✓ Sync Queue tracks:
-      - Operation (POST/PATCH/DELETE)
-      - Endpoint and payload
-      - Callback function name
-      - Timestamp and retry count
-      - Status (pending, syncing, completed, failed)
-  
-  ✓ Auto-sync when online:
-      - Check if entity exists on server (by ID)
-      - If exists → PATCH (update), else POST (create)
-      - Execute callback on success
-      - Mark as synced in syncInfo
-  
-  ✓ Conflict resolution:
-      - Server timestamp takes precedence
-      - Show user warning with merge options
-  
-  ✓ Media sync:
-      - Store local images as blobs in IndexedDB
-      - Name: {entityType}_{entityId}_{date}.{ext}
-      - Upload to Cloudinary via /api/media/upload
-      - Replace local URL with cloud URL
-
-IMPLEMENTATION DETAILS:
-  Frontend:
-    - Dexie.js for IndexedDB with typed tables
-    - useDb hook with store/update/query methods
-    - useSyncQueue hook to trigger sync
-    - Service Worker for offline detection
-    - Automatic sync on connection restore
-  
-  Backend:
-    - Sync queue API endpoints
-    - Validation callbacks for data integrity
-    - Media upload to Cloudinary + local caching
-    - Timestamp-based conflict detection
-    - Retry mechanism with exponential backoff
-
-
-═══════════════════════════════════════════════════════════════════════════════
-
-TECH IMPLEMENTATION STACK
-
-Frontend:
-  • React 18+ with Hooks & Context API
-  • React Router v6 for navigation
-  • React Query/SWR for data fetching
-  • React Hook Form for forms
-  • IndexedDB (Dexie.js) for offline storage
-  • Service Worker for PWA capabilities
-  • Recharts for data visualization
-  • Axios for API calls
-  • Tailwind CSS for styling
-  • Vite for build tooling
-
-Backend:
-  • Node.js + Express.js
-  • MongoDB for database
-  • JWT for authentication
-  • Bcrypt for password hashing
-  • Nodemailer for email
-  • Cloudinary for image hosting
-  • node-cron for scheduled jobs
-  • OpenAI API for AI features
-  • Joi/Yup for validation
-
-Infrastructure:
-  • Vercel for frontend deployment
-  • Heroku/Railway/Render for backend
-  • MongoDB Atlas for cloud database
-  • Cloudinary for CDN/image storage
-  • SendGrid/Mailgun for email service
-
-═══════════════════════════════════════════════════════════════════════════════
-
-KEY DEVELOPMENT PRACTICES
-
-1. Code Organization:
-   - Use MVC pattern: Models, Views, Controllers
-   - Separate utilities, middlewares, routes, controllers
-   - Keep files focused and modular
-   - Use meaningful, consistent naming
-
-2. Offline-First Architecture:
-   - All data operations sync to IndexedDB first
-   - Validate data before sending to server
-   - Implement conflict resolution gracefully
-
-3. State Management:
-   - Use React Context for auth, user, theme
-   - Use React Query for server state
-   - Use local state for UI-only state
-
-4. API Design:
-   - RESTful endpoints with clear naming
-   - Proper HTTP status codes
-   - Validation on both frontend & backend
-   - Rate limiting for public endpoints
-
-5. Security:
-   - Hash passwords with bcrypt
-   - Use JWT with short expiry + refresh tokens
-   - Validate all user inputs
-   - HTTPS only in production
-   - Store sensitive data server-side only
-
-6. UI/UX Principles:
-   - Consistent primary/secondary colors
-   - Medicine-themed color palette (greens, blues, whites)
-   - Dark theme with auto phone theme detection
-   - Responsive design (mobile-first)
-   - Accessibility (alt text, ARIA labels, etc.)
-
-7. Performance:
-   - Lazy load components & images
-   - Debounce search inputs (300ms)
-   - Cache API responses (30s default)
-   - Minimize bundle size
-   - Pre-compute heavy aggregations
-
-8. Testing:
-   - Unit tests for utilities
-   - Integration tests for API endpoints
-   - E2E tests for critical flows
-   - Minimum 70% code coverage
-
-═══════════════════════════════════════════════════════════════════════════════
+🏠 Dashboard
+👋 Greeting
+Total Medicines
+Expiring Soon
+Total Loans
+Medicines Added This Month
+Quick Actions
+Add Medicine
+Record Loan
+View Expiry
+💊 Medicines
+
+This is the heart of the app.
+
+Each medicine has:
+
+Image
+Medicine Name
+Generic Name (Optional)
+Selling Price
+Category
+Description
+Expiry Date
+Notes
+
+Actions
+
+Search
+Edit
+Delete
+Favorite/Pin frequently used medicines
+
+This alone solves "I forgot the price."
+
+💳 Loans
+
+Probably your biggest selling point.
+
+Each loan contains:
+
+Customer Name
+Phone Number
+Medicines Taken
+Total Amount
+Date
+Due Date
+Paid / Unpaid
+Notes
+
+Actions
+
+Search customer
+Mark as paid
+View history
+📦 Supplier Invoices
+
+Since invoices are only used when buying from suppliers.
+
+Store:
+
+Supplier Name
+Invoice Image (take a photo)
+Invoice Number
+Date
+Total Amount
+Notes
+
+Now your father never loses supplier invoices.
+
+⏰ Expiry Tracker
+
+Show medicines grouped as:
+
+🔴 Expired
+
+🟡 Expires within 30 days
+
+🟢 Safe
+
+Later, use a scheduled job (cron) to:
+
+Send app notifications.
+Send SMS (optional, since SMS has a cost).
+Send WhatsApp reminders if you eventually integrate WhatsApp.
+🔍 Smart Search
+
+Imagine your father typing:
+
+Para
+
+Instantly sees:
+
+Paracetamol
+
+₦500
+
+Expires:
+Jan 2027
+
+No more searching through shelves just to remember a price.
+
+🤖 AI (Version 2)
+
+Now this is where AI actually adds value.
+
+Not "AI because AI is cool."
+
+Examples:
+
+💬 Natural language search
+
+Your father types:
+
+"Customer has headache and fever."
+
+AI suggests common medicines stocked in the pharmacy.
+
+Important: Display a disclaimer that suggestions are informational and the pharmacist should use professional judgment and local regulations.
+
+📖 Pharmacy Instructions
+
+Your father writes:
+
+If someone asks for Product A and it's unavailable,
+recommend Product B.
+
+Don't recommend antibiotics without a prescription.
+
+Children under 5:
+Use Product C.
+
+AI reads those custom rules before making suggestions.
+
+🧠 Knowledge Assistant
+
+Ask:
+
+"What's the price of Amoxicillin?"
+
+AI answers from your own database.
+
+📊 AI Insights (Later)
+
+Examples:
+
+"These 12 medicines expire next month."
+"You have 18 unpaid loans."
+"The most searched medicine this week was Paracetamol."
+
+
+One feature I'd add
+
+I'd also include a Medicine History page.
+
+When your father updates the price, don't overwrite the old one—save a history.
+
+Example:
+
+Paracetamol
+
+Current Price
+₦500
+
+Previous Prices
+
+₦450 (June)
+
+₦400 (May)
+
+₦380 (April)
